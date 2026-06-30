@@ -1,0 +1,60 @@
+{
+  "app": {
+    "title": "Sistema de trazabilidad con doble scanner y PLC",
+    "auto_start": false,
+    "simulation_enabled": true
+  },
+  "scanners": {
+    "right": {
+      "name": "Nido derecho",
+      "ip": "192.168.0.10",
+      "port": 5000,
+      "timeout_seconds": 1.0,
+      "reconnect_interval_seconds": 2.0
+    },
+    "left": {
+      "name": "Nido izquierdo",
+      "ip": "192.168.0.11",
+      "port": 5000,
+      "timeout_seconds": 1.0,
+      "reconnect_interval_seconds": 2.0
+    }
+  },
+  "plc": {
+    "port": "COM3",
+    "baudrate": 9600,
+    "bytesize": 7,
+    "parity": "E",
+    "stopbits": 1,
+    "timeout": 1.0,
+    "d0_values": {
+      "reset": "0000",
+      "ok": "0100",
+      "error": "0200"
+    },
+    "reset_delay_ms": 500
+  },
+  "validation": {
+    "expected_length": 22,
+    "scanner_error_tokens": ["ERROR", "NG", "NOREAD", "NO READ", "NO_READ"]
+  },
+  "cycle": {
+    "read_timeout_ms": 3000,
+    "cooldown_ms": 1000,
+    "accept_first_useful_reading_only": true,
+    "clear_buffers_after_cycle": true
+  },
+  "simulation": {
+    "cycle_interval_ms": 3500
+  },
+  "storage": {
+    "excel_path": "data/base_datos_produccion.xlsx",
+    "sqlite_path": "data/trazabilidad.db"
+  },
+  "logging": {
+    "level": "INFO",
+    "file_path": "logs/trazabilidad.log",
+    "max_bytes": 1048576,
+    "backup_count": 5
+  }
+}
