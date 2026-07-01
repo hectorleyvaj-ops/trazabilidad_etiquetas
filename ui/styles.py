@@ -141,10 +141,10 @@ def result_panel_style(status: str) -> str:
     r, g, b = BACKGROUND[kind]
     return f"""
     QFrame {{
-        background-color: rgba({r}, {g}, {b}, 0.62);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-bottom: 6px solid {color};
-        border-radius: 26px;
+        background-color: rgba({r}, {g}, {b}, 0.58);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-bottom: 4px solid {color};
+        border-radius: 22px;
     }}
     """
 
@@ -155,7 +155,7 @@ def card_style(status: str) -> str:
     QFrame {{
         background-color: {SURFACE};
         border: 1px solid {BORDER_SOFT};
-        border-top: 7px solid {color};
+        border-top: 6px solid {color};
         border-radius: 28px;
     }}
     """
@@ -166,12 +166,12 @@ def indicator_style(status: str) -> str:
     return f"""
     QLabel {{
         background-color: {color};
-        border: 10px solid rgba(255, 255, 255, 0.30);
-        border-radius: 72px;
-        min-width: 144px;
-        max-width: 144px;
-        min-height: 144px;
-        max-height: 144px;
+        border: 8px solid rgba(255, 255, 255, 0.28);
+        border-radius: 58px;
+        min-width: 116px;
+        max-width: 116px;
+        min-height: 116px;
+        max-height: 116px;
     }}
     """
 
@@ -181,11 +181,14 @@ def result_text_style(status: str) -> str:
     return f"""
     QLabel {{
         color: {color};
-        font-size: 28px;
-        font-weight: 950;
-        letter-spacing: 0.7px;
+        font-family: Cascadia Mono, Consolas, monospace;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: 0.25px;
+        line-height: 1.25;
         border: none;
         background: transparent;
+        padding: 0px 12px;
     }}
     """
 
@@ -204,10 +207,10 @@ def stat_chip_style(kind: str) -> str:
     color = COLOR.get(kind, COLOR["neutral"])
     return f"""
     QFrame {{
-        background-color: rgba(2, 6, 23, 0.34);
-        border: 1px solid rgba(148, 163, 184, 0.10);
-        border-bottom: 4px solid {color};
-        border-radius: 14px;
+        background-color: rgba(2, 6, 23, 0.30);
+        border: 1px solid rgba(148, 163, 184, 0.08);
+        border-bottom: 3px solid {color};
+        border-radius: 12px;
     }}
     """
 
@@ -257,7 +260,6 @@ def alert_dialog_style() -> str:
         border-radius: 10px;
         padding: 9px 18px;
         font-weight: 800;
-    }}
     QPushButton:hover {{
         background-color: rgba(255, 255, 255, 0.18);
     }}

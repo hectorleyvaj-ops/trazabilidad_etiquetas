@@ -47,8 +47,8 @@ class MainWindow(QMainWindow):
         self.notified_disconnected_devices: set[str] = set()
 
         self.setWindowTitle(config["app"].get("title", "Sistema de trazabilidad"))
-        self.resize(1220, 760)
-        self.setMinimumSize(1080, 660)
+        self.resize(1220, 740)
+        self.setMinimumSize(1080, 640)
         self.setStyleSheet(APP_STYLESHEET)
 
         self._build_ui()
@@ -62,23 +62,23 @@ class MainWindow(QMainWindow):
         self.root_widget = QWidget()
         self.root_widget.setObjectName("appRoot")
         root = QVBoxLayout(self.root_widget)
-        root.setContentsMargins(22, 18, 22, 16)
-        root.setSpacing(13)
+        root.setContentsMargins(22, 16, 22, 14)
+        root.setSpacing(12)
 
         # Header: resultado dominante + contadores globales. Sin títulos redundantes.
         self.result_panel = QFrame()
         self.result_panel.setStyleSheet(result_panel_style("ESPERANDO"))
         result_layout = QVBoxLayout(self.result_panel)
-        result_layout.setContentsMargins(24, 16, 24, 16)
-        result_layout.setSpacing(10)
+        result_layout.setContentsMargins(22, 10, 22, 10)
+        result_layout.setSpacing(6)
 
         self.cycle_result_label = QLabel("INICIANDO")
         self.cycle_result_label.setAlignment(Qt.AlignCenter)
         self.cycle_result_label.setStyleSheet(
-            "font-size: 56px; font-weight: 950; letter-spacing: 1.2px; "
+            "font-size: 42px; font-weight: 950; letter-spacing: 1.2px; "
             "border: none; background: transparent;"
         )
-        self.cycle_result_label.setMinimumHeight(62)
+        self.cycle_result_label.setMinimumHeight(48)
 
         self.counter_strip = ProductionCounterStrip()
 

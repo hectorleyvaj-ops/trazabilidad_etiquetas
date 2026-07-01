@@ -26,16 +26,17 @@ from ui.styles import (
 
 
 class SensorCard(QWidget):
-    """Tarjeta de nido para pantalla de operador.
+    """Tarjeta minimalista de nido para operador.
 
-    Muestra solo: título, indicador grande, código recibido y resultado.
-    Mientras no llega una lectura, el área del código queda vacía.
+    Muestra: título, indicador circular y una sola línea de estado/código.
+    El objetivo es evitar solapes y no repetir información técnica.
     """
 
     def __init__(self, title: str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.title = title
         self.current_status = "ESPERANDO"
+        self.current_code = ""
 
         self.frame = QFrame()
         self.frame.setStyleSheet(card_style("ESPERANDO"))
@@ -44,45 +45,32 @@ class SensorCard(QWidget):
         self.title_label = QLabel(title)
         self.title_label.setAlignment(Qt.AlignCenter)
         self.title_label.setStyleSheet(
-            "font-size: 30px; font-weight: 900; letter-spacing: 0.7px; "
+            "font-size: 28px; font-weight: 900; letter-spacing: 0.6px; "
             "border: none; background: transparent; color: rgba(243, 246, 248, 0.96);"
         )
-        self.title_label.setFixedHeight(44)
+        self.title_label.setFixedHeight(40)
 
         self.indicator = QLabel()
         self.indicator.setAlignment(Qt.AlignCenter)
         self.indicator.setStyleSheet(indicator_style("ESPERANDO"))
         self.indicator.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        self.code_label = QLabel("")
-        self.code_label.setAlignment(Qt.AlignCenter)
-        self.code_label.setWordWrap(True)
-        self.code_label.setMinimumHeight(88)
-        self.code_label.setMaximumHeight(110)
-        self.code_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.code_label.setStyleSheet(
-            "font-family: Cascadia Mono, Consolas, monospace; font-size: 28px; "
-            "font-weight: 850; border: none; background: transparent; padding: 2px 8px;"
-        )
-
-        self.result_label = QLabel("")
-        self.result_label.setAlignment(Qt.AlignCenter)
-        self.result_label.setWordWrap(False)
-        self.result_label.setMinimumHeight(42)
-        self.result_label.setMaximumHeight(52)
-        self.result_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.result_label.setStyleSheet(result_text_style("ESPERANDO"))
+        self.status_code_label = QLabel("ESPERANDO")
+        self.status_code_label.setAlignment(Qt.AlignCenter)
+        self.status_code_label.setWordWrap(True)
+        self.status_code_label.setMinimumHeight(108)
+        self.status_code_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.status_code_label.setStyleSheet(result_text_style("ESPERANDO"))
 
         layout = QVBoxLayout(self.frame)
-        layout.setContentsMargins(30, 26, 30, 26)
-        layout.setSpacing(16)
+        layout.setContentsMargins(30, 24, 30, 28)
+        layout.setSpacing(0)
         layout.addWidget(self.title_label)
         layout.addStretch(1)
         layout.addWidget(self.indicator, alignment=Qt.AlignCenter)
-        layout.addSpacing(18)
-        layout.addWidget(self.code_label)
-        layout.addWidget(self.result_label)
-        layout.addStretch(1)
+        layout.addSpacing(34)
+        layout.addWidget(self.status_code_label)
+        layout.addStretch(2)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -92,50 +80,48 @@ class SensorCard(QWidget):
         self.current_status = status
         self.indicator.setStyleSheet(indicator_style(status))
         self.frame.setStyleSheet(card_style(status))
-        self.result_label.setStyleSheet(result_text_style(status))
-
-        if status == "SIN CONEXIÓN":
-            self.result_label.setText("SIN CONEXIÓN")
-            return
-
-        if status == "LECTURA RECIBIDA" and self.code_label.text():
-            self.result_label.setText("RECIBIDO")
-            return
-
-        if status in {"ESPERANDO", "COOLDOWN", "LECTURA RECIBIDA"}:
-            if not self.code_label.text():
-                self.result_label.setText("")
-            return
-
-        self.result_label.setText(self._friendly_status(status))
+        self.status_code_label.setStyleSheet(result_text_style(status))
+        self._refresh_text()
 
     def set_code(self, code: str, length: int, timestamp: str) -> None:
         del length, timestamp  # La pantalla de producción no muestra datos técnicos.
-        self.code_label.setText(code or "")
-        if self.current_status in {"ESPERANDO", "LECTURA RECIBIDA", "COOLDOWN"}:
-            self.result_label.setText("RECIBIDO")
-            self.result_label.setStyleSheet(result_text_style("LECTURA RECIBIDA"))
+        self.current_code = (code or "").strip()
+        if self.current_status in {"ESPERANDO", "COOLDOWN"}:
+            self.current_status = "LECTURA RECIBIDA"
+        self.status_code_label.setStyleSheet(result_text_style(self.current_status))
+        self._refresh_text()
 
     def reset(self) -> None:
         self.current_status = "ESPERANDO"
-        self.code_label.setText("")
-        self.result_label.setText("")
-        self.result_label.setStyleSheet(result_text_style("ESPERANDO"))
+        self.current_code = ""
+        self.status_code_label.setText("ESPERANDO")
+        self.status_code_label.setStyleSheet(result_text_style("ESPERANDO"))
         self.indicator.setStyleSheet(indicator_style("ESPERANDO"))
         self.frame.setStyleSheet(card_style("ESPERANDO"))
+
+    def _refresh_text(self) -> None:
+        status_text = self._friendly_status(self.current_status)
+        if self.current_code:
+            self.status_code_label.setText(f"{status_text} - {self.current_code}")
+        else:
+            self.status_code_label.setText(status_text)
 
     @staticmethod
     def _friendly_status(status: str) -> str:
         labels = {
-            "ESPERANDO": "",
+            "ESPERANDO": "ESPERANDO",
+            "ESPERANDO LECTURAS": "ESPERANDO",
             "LECTURA RECIBIDA": "RECIBIDO",
-            "NUEVO": "OK",
-            "OK": "OK",
+            "NUEVO": "CORRECTO",
+            "OK": "CORRECTO",
+            "LECTURA OK": "CORRECTO",
             "DUPLICADO": "DUPLICADO",
             "ERROR LONGITUD": "ERROR CÓDIGO",
+            "ERROR DE LONGITUD": "ERROR CÓDIGO",
             "ERROR SCANNER": "ERROR LECTURA",
+            "ERROR DE LECTURA": "ERROR LECTURA",
             "SIN CONEXIÓN": "SIN CONEXIÓN",
-            "COOLDOWN": "",
+            "COOLDOWN": "LIMPIANDO",
         }
         return labels.get(status, status)
 
@@ -189,8 +175,8 @@ class ProductionCounterStrip(QWidget):
         self.read_error_chip = StatChip("LECT", "error")
 
         layout = QGridLayout(self.frame)
-        layout.setContentsMargins(10, 8, 10, 8)
-        layout.setHorizontalSpacing(9)
+        layout.setContentsMargins(8, 6, 8, 6)
+        layout.setHorizontalSpacing(8)
         layout.setVerticalSpacing(0)
         layout.addWidget(self.total_chip, 0, 0)
         layout.addWidget(self.good_chip, 0, 1)
@@ -221,17 +207,17 @@ class StatChip(QWidget):
 
         self.value = QLabel("0")
         self.value.setAlignment(Qt.AlignCenter)
-        self.value.setStyleSheet("font-size: 33px; font-weight: 950; border: none; background: transparent;")
+        self.value.setStyleSheet("font-size: 25px; font-weight: 950; border: none; background: transparent;")
 
         self.label = QLabel(label)
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setStyleSheet(
-            "font-size: 10px; color: rgba(226, 232, 240, 0.68); "
+            "font-size: 9px; color: rgba(226, 232, 240, 0.66); "
             "font-weight: 900; border: none; background: transparent; letter-spacing: 0.5px;"
         )
 
         layout = QVBoxLayout(self.frame)
-        layout.setContentsMargins(10, 6, 10, 7)
+        layout.setContentsMargins(8, 4, 8, 5)
         layout.setSpacing(0)
         layout.addWidget(self.value)
         layout.addWidget(self.label)
