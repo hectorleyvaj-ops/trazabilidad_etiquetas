@@ -666,3 +666,16 @@ serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError
 2026-07-01 11:07:59 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
 2026-07-01 11:08:02 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
 2026-07-01 11:08:02 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 14:01:20 | INFO     | workers.traceability_worker | Inicio del sistema en modo real.
+2026-07-01 14:01:20 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 14:01:22 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=
+2026-07-01 14:01:23 | ERROR    | devices.scanner_tcp | No se pudo conectar Scanner derecho en 192.168.0.10:5000
+Traceback (most recent call last):
+  File "C:\Users\DELL 7050\Desktop\trazabilidad_produccion_base\trazabilidad_produccion\devices\scanner_tcp.py", line 63, in connect
+    sock.connect((self.ip, self.port))
+TimeoutError: timed out
+2026-07-01 14:01:24 | ERROR    | devices.scanner_tcp | No se pudo conectar Scanner izquierdo en 192.168.0.11:5000
+Traceback (most recent call last):
+  File "C:\Users\DELL 7050\Desktop\trazabilidad_produccion_base\trazabilidad_produccion\devices\scanner_tcp.py", line 63, in connect
+    sock.connect((self.ip, self.port))
+TimeoutError: timed out
