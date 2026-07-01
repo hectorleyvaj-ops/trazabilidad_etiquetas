@@ -1,0 +1,258 @@
+import pandas as pd
+import serial
+import time
+import os
+import socket
+from datetime import datetime
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font, PatternFill
+
+# ==========================================
+# 1. CONFIGURACIÓN
+# ==========================================
+IP_SCANNER_DERECHO = '192.168.0.10'
+IP_SCANNER_IZQUIERDO = '192.168.0.11'
+PUERTO_SCANNERS = 5000  
+
+PUERTO_PLC = 'COM3'    
+ARCHIVO_EXCEL = 'base_datos_produccion.xlsx'
+TIEMPO_ACTIVACION = 2  
+
+# Variables globales para indicadores de producción (KPIs)
+CONTEO_NUEVOS = 0
+CONTEO_DUPLICADOS = 0
+CONTEO_ERRORES = 0
+
+# ==========================================
+# 2. FUNCIONES DE EXCEL Y COMUNICACIÓN
+# ==========================================
+def verificar_y_crear_excel():
+    """Crea el Excel con formato profesional si no existe y carga contadores."""
+    global CONTEO_NUEVOS, CONTEO_DUPLICADOS, CONTEO_ERRORES
+    
+    if not os.path.exists(ARCHIVO_EXCEL):
+        print(f"[INFO] Creando base de datos nueva con formato presentable...")
+        wb = Workbook()
+        ws = wb.active
+        
+        # 1. Nuevas cabeceras con FECHA al inicio
+        cabeceras = ['FECHA', 'Codigo_Serie', 'LECTOR', 'ESTADO', 'TOTAL_NUEVOS', 'TOTAL_DUPLICADOS', 'TOTAL_ERRORES']
+        ws.append(cabeceras)
+        
+        # 2. Diseño de Cabeceras (Fondo Azul, Letra Blanca, Negritas)
+        fondo_cabecera = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+        letra_cabecera = Font(color="FFFFFF", bold=True)
+        
+        for celda in ws[1]:
+            celda.fill = fondo_cabecera
+            celda.font = letra_cabecera
+            
+        # 3. Ajuste de ancho de columnas para lectura perfecta
+        anchos = {'A': 22, 'B': 30, 'C': 15, 'D': 22, 'E': 18, 'F': 20, 'G': 18}
+        for col_letra, ancho in anchos.items():
+            ws.column_dimensions[col_letra].width = ancho
+
+        wb.save(ARCHIVO_EXCEL)
+        CONTEO_NUEVOS = 0
+        CONTEO_DUPLICADOS = 0
+        CONTEO_ERRORES = 0
+    else:
+        # Si ya existe, recuperar contadores
+        try:
+            df = pd.read_excel(ARCHIVO_EXCEL)
+            if 'ESTADO' in df.columns:
+                CONTEO_NUEVOS = len(df[df['ESTADO'] == 'NUEVO'])
+                CONTEO_DUPLICADOS = len(df[df['ESTADO'] == 'DUPLICADO'])
+                CONTEO_ERRORES = len(df[df['ESTADO'] == 'ERROR DE LECTURA'])
+        except Exception:
+            pass 
+
+def registrar_en_excel(ws, codigo, lector, estado, fecha_hora):
+    """Guarda el dato, auto-ajusta la celda si el código es largo y colorea alertas."""
+    global CONTEO_NUEVOS, CONTEO_DUPLICADOS, CONTEO_ERRORES
+    
+    if estado == "NUEVO": CONTEO_NUEVOS += 1
+    elif estado == "DUPLICADO": CONTEO_DUPLICADOS += 1
+    elif estado == "ERROR DE LECTURA": CONTEO_ERRORES += 1
+
+    # Agregar fila respetando el nuevo orden (FECHA primero)
+    ws.append([fecha_hora, codigo, lector, estado, CONTEO_NUEVOS, CONTEO_DUPLICADOS, CONTEO_ERRORES])
+    
+    # Auto-ensanchar la columna 'B' (Codigo_Serie) si el texto es muy grande
+    longitud_texto = len(str(codigo)) + 4
+    if longitud_texto > ws.column_dimensions['B'].width:
+        ws.column_dimensions['B'].width = longitud_texto
+
+    # Pintar de ROJO intenso si hay problema
+    if estado in ["DUPLICADO", "ERROR DE LECTURA"]:
+        relleno_rojo = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+        fuente_negra = Font(color="000000", bold=True)
+        for celda in ws[ws.max_row]:
+            celda.fill = relleno_rojo
+            celda.font = fuente_negra
+
+def armar_trama(valor_hex_little_endian):
+    cmd = f"1100002{valor_hex_little_endian}"
+    suma = sum(ord(c) for c in cmd) + 3
+    checksum = f"{suma & 0xFF:02X}"
+    return b'\x02' + cmd.encode() + b'\x03' + checksum.encode()
+
+def enviar_dato_d0(plc, valor_hex_little_endian, descripcion):
+    try:
+        trama = armar_trama(valor_hex_little_endian)
+        plc.write(b'\x05') 
+        time.sleep(0.1)
+        plc.write(trama)   
+        time.sleep(0.1)
+        plc.read(10)
+        print(f"   [PLC] -> {descripcion} ejecutado con éxito.")
+        return True
+    except serial.SerialException:
+        print(f"   [!] ALARMA FATAL: Comunicación con el PLC ({PUERTO_PLC}) perdida.")
+        return False
+
+# ==========================================
+# 3. WATCHDOG (AUTO-RECUPERACIÓN)
+# ==========================================
+def reconectar_plc():
+    try:
+        p = serial.Serial(port=PUERTO_PLC, baudrate=9600, bytesize=serial.SEVENBITS, 
+                          parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE, timeout=1)
+        print(f"[✅] PLC conectado exitosamente en {PUERTO_PLC}")
+        return p
+    except:
+        return None
+
+def reconectar_escaner(ip, puerto, nombre):
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.2)
+        s.connect((ip, puerto))
+        print(f"[✅] {nombre} conectado exitosamente en {ip}:{puerto}")
+        return s
+    except:
+        return None
+
+# ==========================================
+# 4. CICLO PRINCIPAL DE PRODUCCIÓN
+# ==========================================
+print("\n--- SISTEMA DE TRAZABILIDAD INICIADO ---")
+
+verificar_y_crear_excel()
+
+plc = None
+lector_derecho = None
+lector_izquierdo = None
+codigo_der = None
+codigo_izq = None
+
+while True:
+    # --- BLOQUE DE CONEXIÓN ---
+    if plc is None:
+        print(f"[⏳] Esperando conexión con el PLC en {PUERTO_PLC}...")
+        plc = reconectar_plc()
+        if plc: enviar_dato_d0(plc, "0000", "Reset Inicial (D0 = 0)")
+        else: time.sleep(2); continue 
+
+    if lector_derecho is None:
+        print(f"[⏳] Buscando Escáner Derecho ({IP_SCANNER_DERECHO})...")
+        lector_derecho = reconectar_escaner(IP_SCANNER_DERECHO, PUERTO_SCANNERS, "Escáner Derecho")
+        if not lector_derecho: time.sleep(2); continue
+
+    if lector_izquierdo is None:
+        print(f"[⏳] Buscando Escáner Izquierdo ({IP_SCANNER_IZQUIERDO})...")
+        lector_izquierdo = reconectar_escaner(IP_SCANNER_IZQUIERDO, PUERTO_SCANNERS, "Escáner Izquierdo")
+        if not lector_izquierdo: time.sleep(2); continue
+
+    # --- LECTURA DE CÓDIGOS ---
+    if not codigo_der:
+        try:
+            datos_der = lector_derecho.recv(1024)
+            if datos_der: codigo_der = datos_der.decode('utf-8').strip()
+            else: lector_derecho = None
+        except socket.timeout: pass
+        except Exception: lector_derecho = None 
+
+    if not codigo_izq:
+        try:
+            datos_izq = lector_izquierdo.recv(1024)
+            if datos_izq: codigo_izq = datos_izq.decode('utf-8').strip()
+            else: lector_izquierdo = None
+        except socket.timeout: pass
+        except Exception: lector_izquierdo = None 
+
+    # --- LÓGICA PRINCIPAL Y ESTADÍSTICAS ---
+    if codigo_der and codigo_izq and plc and lector_derecho and lector_izquierdo:
+        fecha_hora_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # --- FILTRO NUEVO: Corrección para etiquetas pegadas con /r ---
+        def limpiar_y_formatear(cod):
+            # 1. Quitar basura: partir por /r y quedarse solo con la primera parte
+            cod = cod.split('/r')[0]
+            # 2. Quitar espacios laterales y saltos de línea
+            cod = cod.strip()
+            # 3. Truncar a 22 caracteres máximo como solicitaste
+            return cod[:22]
+
+        # Aplicamos la limpieza a ambos códigos
+        codigo_der = limpiar_y_formatear(codigo_der)
+        codigo_izq = limpiar_y_formatear(codigo_izq)
+
+        print(f"\n[!] LECTURA OBTENIDA | Derecho: {codigo_der} | Izquierdo: {codigo_izq}")
+        
+        verificar_y_crear_excel()
+        
+        try:
+            df = pd.read_excel(ARCHIVO_EXCEL)
+            historial = df['Codigo_Serie'].astype(str).values
+            
+            def evaluar_codigo(cod):
+                if cod.upper() in ["ERROR", "NG", "NOREAD"] or not cod:
+                    return "ERROR DE LECTURA", "ERROR DE LECTURA"
+                elif cod in historial:
+                    return cod, "DUPLICADO"
+                else:
+                    return cod, "NUEVO"
+
+            cod_der_display, estado_der = evaluar_codigo(codigo_der)
+            cod_izq_display, estado_izq = evaluar_codigo(codigo_izq)
+            
+            wb = load_workbook(ARCHIVO_EXCEL)
+            ws = wb.active
+            
+            hay_rechazo = (estado_der != "NUEVO") or (estado_izq != "NUEVO")
+            
+            if hay_rechazo:
+                print("   -> ESTADO: ⚠️ ALARMA ACTIVADA (Rechazo en la línea)")
+                if estado_der != "NUEVO": print(f"      - Lector DERECHO: {estado_der} ({cod_der_display})")
+                if estado_izq != "NUEVO": print(f"      - Lector IZQUIERDO: {estado_izq} ({cod_izq_display})")
+                
+                registrar_en_excel(ws, cod_der_display, "Derecho", estado_der, fecha_hora_actual)
+                registrar_en_excel(ws, cod_izq_display, "Izquierdo", estado_izq, fecha_hora_actual)
+                wb.save(ARCHIVO_EXCEL)
+                
+                if not enviar_dato_d0(plc, "0200", "Escribiendo K2"): plc = None
+                if plc: time.sleep(TIEMPO_ACTIVACION)
+                if plc and not enviar_dato_d0(plc, "0000", "Limpiando D0"): plc = None
+                
+            else:
+                print("   -> ESTADO: ✅ AMBOS NUEVOS. Aprobados.")
+                
+                registrar_en_excel(ws, cod_der_display, "Derecho", estado_der, fecha_hora_actual)
+                registrar_en_excel(ws, cod_izq_display, "Izquierdo", estado_izq, fecha_hora_actual)
+                wb.save(ARCHIVO_EXCEL)
+                
+                if not enviar_dato_d0(plc, "0100", "Escribiendo K1"): plc = None
+                if plc: time.sleep(TIEMPO_ACTIVACION)
+                if plc and not enviar_dato_d0(plc, "0000", "Limpiando D0"): plc = None
+                
+        except PermissionError:
+            print("[ERROR EXCEL] ¡El archivo Excel está abierto! Ciérralo para guardar los datos.")
+            time.sleep(2)
+        except Exception as e:
+            print(f"[ERROR EN LÓGICA] {e}")
+            
+        # Limpiar variables para el siguiente par
+        if plc:
+            codigo_der = None
+            codigo_izq = None

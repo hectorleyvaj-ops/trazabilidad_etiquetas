@@ -1,0 +1,96 @@
+2026-07-01 08:57:11 | INFO     | workers.traceability_worker | Inicio del sistema en modo simulación.
+2026-07-01 08:57:11 | INFO     | workers.traceability_worker | Scanner derecho conectado a 192.168.0.10:5000.
+2026-07-01 08:57:11 | INFO     | workers.traceability_worker | Scanner izquierdo conectado a 192.168.0.11:5000.
+2026-07-01 08:57:11 | INFO     | workers.traceability_worker | PLC conectado en COM3 @ 9600.
+2026-07-01 08:57:11 | INFO     | workers.traceability_worker | Worker simulado ejecutándose cada 3500 ms.
+2026-07-01 08:57:14 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Lectura simulada válida.
+2026-07-01 08:57:14 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 08:57:14 | INFO     | workers.traceability_worker | Ciclo OK. Valor simulado al PLC: K1 / 0100.
+2026-07-01 08:57:14 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 08:57:14 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 08:57:18 | INFO     | workers.traceability_worker | RIGHT → DUPLICADO: Código ya existe con estado NUEVO.
+2026-07-01 08:57:18 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 08:57:18 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 08:57:18 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 08:57:18 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 08:57:20 | INFO     | workers.traceability_worker | Sistema detenido de forma segura.
+2026-07-01 08:59:55 | INFO     | workers.traceability_worker | Inicio del sistema en modo simulación.
+2026-07-01 08:59:55 | INFO     | workers.traceability_worker | Scanner derecho conectado a 192.168.0.10:5000.
+2026-07-01 08:59:55 | INFO     | workers.traceability_worker | Scanner izquierdo conectado a 192.168.0.11:5000.
+2026-07-01 08:59:55 | INFO     | workers.traceability_worker | PLC conectado en COM3 @ 9600.
+2026-07-01 08:59:55 | INFO     | workers.traceability_worker | Worker simulado ejecutándose cada 3500 ms.
+2026-07-01 08:59:58 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Lectura simulada válida.
+2026-07-01 08:59:58 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 08:59:58 | INFO     | workers.traceability_worker | Ciclo OK. Valor simulado al PLC: K1 / 0100.
+2026-07-01 08:59:58 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 08:59:58 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:02 | INFO     | workers.traceability_worker | RIGHT → DUPLICADO: Código ya existe con estado NUEVO.
+2026-07-01 09:00:02 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:02 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:02 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:02 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:05 | INFO     | workers.traceability_worker | RIGHT → ERROR LONGITUD: Lectura empalmada simulada; no se recorta.
+2026-07-01 09:00:05 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:05 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:05 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:05 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:09 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:09 | INFO     | workers.traceability_worker | LEFT → ERROR SCANNER: Token explícito de error del scanner.
+2026-07-01 09:00:09 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:09 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:09 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:12 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:12 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:12 | INFO     | workers.traceability_worker | Ciclo OK. Valor simulado al PLC: K1 / 0100.
+2026-07-01 09:00:12 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:12 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:16 | INFO     | workers.traceability_worker | RIGHT → DUPLICADO: Código ya existe con estado NUEVO.
+2026-07-01 09:00:16 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:16 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:16 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:16 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:19 | INFO     | workers.traceability_worker | RIGHT → ERROR LONGITUD: Lectura empalmada simulada; no se recorta.
+2026-07-01 09:00:19 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:19 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:19 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:19 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:23 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:23 | INFO     | workers.traceability_worker | LEFT → ERROR SCANNER: Token explícito de error del scanner.
+2026-07-01 09:00:23 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:23 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:23 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:26 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:26 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:26 | INFO     | workers.traceability_worker | Ciclo OK. Valor simulado al PLC: K1 / 0100.
+2026-07-01 09:00:26 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:26 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:30 | INFO     | workers.traceability_worker | RIGHT → DUPLICADO: Código ya existe con estado NUEVO.
+2026-07-01 09:00:30 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:30 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:30 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:30 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:33 | INFO     | workers.traceability_worker | RIGHT → ERROR LONGITUD: Lectura empalmada simulada; no se recorta.
+2026-07-01 09:00:33 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:33 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:33 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:33 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:37 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:37 | INFO     | workers.traceability_worker | LEFT → ERROR SCANNER: Token explícito de error del scanner.
+2026-07-01 09:00:37 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:37 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:37 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:40 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:40 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:40 | INFO     | workers.traceability_worker | Ciclo OK. Valor simulado al PLC: K1 / 0100.
+2026-07-01 09:00:40 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:40 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:44 | INFO     | workers.traceability_worker | RIGHT → DUPLICADO: Código ya existe con estado NUEVO.
+2026-07-01 09:00:44 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:44 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:44 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:44 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 09:00:47 | INFO     | workers.traceability_worker | RIGHT → ERROR LONGITUD: Lectura empalmada simulada; no se recorta.
+2026-07-01 09:00:47 | INFO     | workers.traceability_worker | LEFT → NUEVO: Lectura simulada válida.
+2026-07-01 09:00:47 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
+2026-07-01 09:00:47 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
+2026-07-01 09:00:47 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
