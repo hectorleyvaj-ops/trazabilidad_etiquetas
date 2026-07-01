@@ -94,3 +94,575 @@
 2026-07-01 09:00:47 | WARNING  | workers.traceability_worker | Ciclo con error. Valor simulado al PLC: K2 / 0200.
 2026-07-01 09:00:47 | INFO     | workers.traceability_worker | Reset simulado al PLC: K0 / 0000.
 2026-07-01 09:00:47 | INFO     | workers.traceability_worker | Cooldown simulado; lecturas tardías serían ignoradas.
+2026-07-01 10:45:19 | INFO     | workers.traceability_worker | Inicio del sistema en modo real.
+2026-07-01 10:45:19 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 10:45:20 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:45:20 | INFO     | devices.scanner_tcp | Scanner derecho conectado en 192.168.0.10:5000
+2026-07-01 10:45:20 | INFO     | devices.scanner_tcp | Scanner izquierdo conectado en 192.168.0.11:5000
+2026-07-01 10:45:27 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:45:27 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:45:27 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:45:27 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:45:27 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:45:27 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:45:28 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:45:28 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:45:31 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:45:31 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:45:34 | INFO     | workers.traceability_worker | Sistema detenido de forma segura.
+2026-07-01 10:45:48 | INFO     | workers.traceability_worker | Inicio del sistema en modo real.
+2026-07-01 10:45:48 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': PermissionError(13, 'Access is denied.', None, 5)
+2026-07-01 10:45:48 | INFO     | devices.scanner_tcp | Scanner derecho conectado en 192.168.0.10:5000
+2026-07-01 10:45:48 | INFO     | devices.scanner_tcp | Scanner izquierdo conectado en 192.168.0.11:5000
+2026-07-01 10:45:50 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': PermissionError(13, 'Access is denied.', None, 5)
+2026-07-01 10:45:52 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 10:45:53 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:45:53 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:45:53 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:45:53 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:45:53 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:45:53 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:45:53 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:45:54 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:45:54 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:45:57 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:45:57 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:46:02 | INFO     | workers.traceability_worker | Sistema detenido de forma segura.
+2026-07-01 10:46:03 | WARNING  | workers.traceability_worker | El sistema ya está detenido.
+2026-07-01 10:46:30 | INFO     | workers.traceability_worker | Inicio del sistema en modo real.
+2026-07-01 10:46:30 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 10:46:31 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:46:31 | INFO     | devices.scanner_tcp | Scanner derecho conectado en 192.168.0.10:5000
+2026-07-01 10:46:31 | INFO     | devices.scanner_tcp | Scanner izquierdo conectado en 192.168.0.11:5000
+2026-07-01 10:46:40 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:46:40 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:46:40 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:46:40 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:46:40 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:46:40 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:46:41 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:46:41 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:46:45 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:46:45 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:47:06 | INFO     | workers.traceability_worker | Sistema detenido de forma segura.
+2026-07-01 10:47:08 | INFO     | storage.excel_repository | Excel creado: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:47:08 | INFO     | workers.traceability_worker | Inicio del sistema en modo real.
+2026-07-01 10:47:08 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 10:47:09 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:47:09 | INFO     | devices.scanner_tcp | Scanner derecho conectado en 192.168.0.10:5000
+2026-07-01 10:47:09 | INFO     | devices.scanner_tcp | Scanner izquierdo conectado en 192.168.0.11:5000
+2026-07-01 10:47:12 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:47:12 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:47:12 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:47:12 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Código válido y nuevo.
+2026-07-01 10:47:12 | INFO     | workers.traceability_worker | LEFT → NUEVO: Código válido y nuevo.
+2026-07-01 10:47:12 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:47:13 | INFO     | devices.plc_fx_serial | PLC <- 0100 (K1 OK), respuesta=06 06
+2026-07-01 10:47:13 | INFO     | workers.traceability_worker | PLC <- K1 OK (0100)
+2026-07-01 10:47:16 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:47:16 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:47:34 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:47:34 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:47:34 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:47:34 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:47:34 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:47:34 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:47:35 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:47:35 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:47:38 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:47:38 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:48:26 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:48:26 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:48:26 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:48:26 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:48:26 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:48:26 | ERROR    | storage.excel_repository | No se pudo escribir Excel. Probablemente está abierto: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\storage\excel_repository.py", line 113, in append_cycle
+    wb.save(self.path)
+  File "C:\envs\trazabilidad\Lib\site-packages\openpyxl\workbook\workbook.py", line 386, in save
+    save_workbook(self, filename)
+  File "C:\envs\trazabilidad\Lib\site-packages\openpyxl\writer\excel.py", line 291, in save_workbook
+    archive = ZipFile(filename, 'w', ZIP_DEFLATED, allowZip64=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\zipfile.py", line 1311, in __init__
+    self.fp = io.open(file, filemode)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:\\Users\\Propietario\\Documents\\Manuel\\Trazabilidad_V2.0\\trazabilidad_etiquetas\\data\\base_datos_produccion.xlsx'
+2026-07-01 10:48:26 | ERROR    | workers.traceability_worker | No se pudo escribir el Excel. Cierra el archivo y vuelve a intentar.
+2026-07-01 10:48:26 | ERROR    | devices.plc_fx_serial | Comunicación con PLC perdida al enviar K2 Error/Alarma
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 65, in send_d0
+    self._serial.write(b"\x05")
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 317, in write
+    raise SerialException("WriteFile failed ({!r})".format(ctypes.WinError()))
+serial.serialutil.SerialException: WriteFile failed (PermissionError(13, 'The device does not recognize the command.', None, 22))
+2026-07-01 10:48:26 | ERROR    | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:48:28 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 10:48:28 | ERROR    | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:48:28 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 10:48:30 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 10:48:32 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 10:48:34 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 10:48:36 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 10:48:38 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': PermissionError(13, 'Access is denied.', None, 5)
+2026-07-01 10:48:40 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': PermissionError(13, 'Access is denied.', None, 5)
+2026-07-01 10:48:42 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': PermissionError(13, 'Access is denied.', None, 5)
+2026-07-01 10:48:44 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 10:48:45 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:48:59 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:48:59 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:48:59 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:48:59 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:48:59 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:48:59 | ERROR    | storage.excel_repository | No se pudo escribir Excel. Probablemente está abierto: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\storage\excel_repository.py", line 113, in append_cycle
+    wb.save(self.path)
+  File "C:\envs\trazabilidad\Lib\site-packages\openpyxl\workbook\workbook.py", line 386, in save
+    save_workbook(self, filename)
+  File "C:\envs\trazabilidad\Lib\site-packages\openpyxl\writer\excel.py", line 291, in save_workbook
+    archive = ZipFile(filename, 'w', ZIP_DEFLATED, allowZip64=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\zipfile.py", line 1311, in __init__
+    self.fp = io.open(file, filemode)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:\\Users\\Propietario\\Documents\\Manuel\\Trazabilidad_V2.0\\trazabilidad_etiquetas\\data\\base_datos_produccion.xlsx'
+2026-07-01 10:48:59 | ERROR    | workers.traceability_worker | No se pudo escribir el Excel. Cierra el archivo y vuelve a intentar.
+2026-07-01 10:49:00 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:49:00 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:49:04 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:49:04 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:51:35 | INFO     | workers.traceability_worker | Inicio del sistema en modo real.
+2026-07-01 10:51:35 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 10:51:36 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:51:36 | INFO     | devices.scanner_tcp | Scanner derecho conectado en 192.168.0.10:5000
+2026-07-01 10:51:36 | INFO     | devices.scanner_tcp | Scanner izquierdo conectado en 192.168.0.11:5000
+2026-07-01 10:51:55 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:51:55 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:51:55 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:51:55 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:51:55 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:51:55 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:51:56 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:51:56 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:52:00 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:52:00 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:52:00 | WARNING  | workers.traceability_worker | Lecturas tardías descartadas al entrar en cooldown: ['A024C393CBLK2615312139', 'A024C393CBLK2615312140']
+2026-07-01 10:52:03 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:52:03 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:52:03 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:52:03 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:52:03 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:52:03 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:52:04 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:52:04 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:52:08 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:52:08 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:52:08 | WARNING  | workers.traceability_worker | Lecturas tardías descartadas al entrar en cooldown: ['A024C393CBLK2615312139', 'A024C393CBLK2615312139', 'A024C393CBLK2615312140']
+2026-07-01 10:52:08 | WARNING  | workers.traceability_worker | Lecturas tardías descartadas durante cooldown: ['A024C393CBLK2615312140']
+2026-07-01 10:52:09 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:52:09 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:52:10 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:52:10 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:52:10 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:52:10 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:52:11 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:52:11 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:52:14 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:52:14 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:52:14 | WARNING  | workers.traceability_worker | Lecturas tardías descartadas al entrar en cooldown: ['A024C393CBLK2615312139', 'A024C393CBLK2615312139', 'A024C393CBLK2615312140', 'A024C393CBLK2615312140']
+2026-07-01 10:52:15 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 10:52:15 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 10:52:15 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 10:52:15 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:52:15 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 10:52:15 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 10:52:17 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 10:52:17 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 10:52:20 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 10:52:20 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 10:52:20 | WARNING  | workers.traceability_worker | Lecturas tardías descartadas al entrar en cooldown: ['A024C393CBLK2615312139', 'A024C393CBLK2615312139', 'A024C393CBLK2615312140', 'A024C393CBLK2615312140']
+2026-07-01 10:52:20 | WARNING  | workers.traceability_worker | Lecturas tardías descartadas durante cooldown: ['A024C393CBLK2615312139', 'A024C393CBLK2615312140']
+2026-07-01 11:06:16 | INFO     | storage.excel_repository | Excel creado: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 11:06:16 | INFO     | workers.traceability_worker | Inicio del sistema en modo real.
+2026-07-01 11:06:16 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': PermissionError(13, 'Access is denied.', None, 5)
+2026-07-01 11:06:16 | INFO     | devices.scanner_tcp | Scanner derecho conectado en 192.168.0.10:5000
+2026-07-01 11:06:16 | INFO     | devices.scanner_tcp | Scanner izquierdo conectado en 192.168.0.11:5000
+2026-07-01 11:06:18 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': PermissionError(13, 'Access is denied.', None, 5)
+2026-07-01 11:06:20 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 11:06:22 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 11:06:29 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 11:06:29 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 11:06:29 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 11:06:29 | INFO     | workers.traceability_worker | RIGHT → NUEVO: Código válido y nuevo.
+2026-07-01 11:06:29 | INFO     | workers.traceability_worker | LEFT → NUEVO: Código válido y nuevo.
+2026-07-01 11:06:29 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 11:06:30 | INFO     | devices.plc_fx_serial | PLC <- 0100 (K1 OK), respuesta=06 06
+2026-07-01 11:06:30 | INFO     | workers.traceability_worker | PLC <- K1 OK (0100)
+2026-07-01 11:06:33 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 11:06:33 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 11:06:39 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 11:06:39 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 11:06:39 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 11:06:39 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:06:39 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:06:39 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 11:06:40 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 11:06:40 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 11:06:43 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 11:06:43 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 11:06:52 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 11:06:52 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 11:06:52 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 11:06:52 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:06:52 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:06:52 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 11:06:52 | ERROR    | devices.plc_fx_serial | Comunicación con PLC perdida al enviar K2 Error/Alarma
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 65, in send_d0
+    self._serial.write(b"\x05")
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 317, in write
+    raise SerialException("WriteFile failed ({!r})".format(ctypes.WinError()))
+serial.serialutil.SerialException: WriteFile failed (PermissionError(13, 'The device does not recognize the command.', None, 22))
+2026-07-01 11:06:52 | ERROR    | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 11:06:54 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:06:54 | ERROR    | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 11:06:54 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:06:56 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:06:59 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:00 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:02 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:04 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:06 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:09 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:14 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 11:07:15 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 11:07:25 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 11:07:25 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 11:07:25 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 11:07:25 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:07:25 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:07:25 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 11:07:27 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 11:07:27 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 11:07:30 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 11:07:30 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 11:07:30 | WARNING  | workers.traceability_worker | Lecturas tardías descartadas al entrar en cooldown: ['A024C393CBLK2615312139', 'A024C393CBLK2615312140']
+2026-07-01 11:07:43 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 11:07:43 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 11:07:43 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 11:07:43 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:07:43 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:07:44 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 11:07:44 | ERROR    | devices.plc_fx_serial | Comunicación con PLC perdida al enviar K2 Error/Alarma
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 65, in send_d0
+    self._serial.write(b"\x05")
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 317, in write
+    raise SerialException("WriteFile failed ({!r})".format(ctypes.WinError()))
+serial.serialutil.SerialException: WriteFile failed (PermissionError(13, 'The device does not recognize the command.', None, 22))
+2026-07-01 11:07:44 | ERROR    | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 11:07:46 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:46 | ERROR    | workers.traceability_worker | PLC <- K0 RESET (0000)
+2026-07-01 11:07:46 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:48 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:50 | ERROR    | devices.plc_fx_serial | No se pudo conectar el PLC en COM3
+Traceback (most recent call last):
+  File "c:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\devices\plc_fx_serial.py", line 24, in connect
+    self._serial = serial.Serial(
+                   ^^^^^^^^^^^^^^
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 33, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialutil.py", line 244, in __init__
+    self.open()
+  File "C:\envs\trazabilidad\Lib\site-packages\serial\serialwin32.py", line 64, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2026-07-01 11:07:55 | INFO     | devices.plc_fx_serial | PLC conectado en COM3 @ 9600
+2026-07-01 11:07:56 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 11:07:57 | INFO     | workers.traceability_worker | Inicio de ciclo por llegada de lectura RIGHT.
+2026-07-01 11:07:57 | INFO     | workers.traceability_worker | RIGHT → lectura recibida para ciclo: 'A024C393CBLK2615312139'
+2026-07-01 11:07:57 | INFO     | workers.traceability_worker | LEFT → lectura recibida para ciclo: 'A024C393CBLK2615312140'
+2026-07-01 11:07:57 | WARNING  | workers.traceability_worker | RIGHT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:07:57 | WARNING  | workers.traceability_worker | LEFT → DUPLICADO: El código ya existe en historial con estado NUEVO.
+2026-07-01 11:07:58 | INFO     | storage.excel_repository | Ciclo registrado en Excel: C:\Users\Propietario\Documents\Manuel\Trazabilidad_V2.0\trazabilidad_etiquetas\data\base_datos_produccion.xlsx
+2026-07-01 11:07:59 | INFO     | devices.plc_fx_serial | PLC <- 0200 (K2 Error/Alarma), respuesta=06 06
+2026-07-01 11:07:59 | WARNING  | workers.traceability_worker | PLC <- K2 ERROR (0200)
+2026-07-01 11:08:02 | INFO     | devices.plc_fx_serial | PLC <- 0000 (K0 Reset), respuesta=06 06
+2026-07-01 11:08:02 | INFO     | workers.traceability_worker | PLC <- K0 RESET (0000)
