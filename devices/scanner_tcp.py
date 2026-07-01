@@ -26,6 +26,10 @@ class ScannerTCP:
     Punto crítico:
     La separación se hace por CR/LF/CRLF ANTES de limpiar la lectura. Así evitamos
     empalmar dos códigos como `ABC\rABC\r\n` y convertirlos en una cadena falsa.
+
+    En modo real, el sistema usa read_available() para escuchar constantemente sin
+    bloquear la UI ni forzar ciclos artificiales. Si llegan varias lecturas juntas,
+    solo se conserva la primera lectura útil y se reportan las demás como descartadas.
     """
 
     def __init__(
@@ -45,6 +49,7 @@ class ScannerTCP:
         self.logger = logger or logging.getLogger(__name__)
         self._sock: socket.socket | None = None
         self._buffer = ""
+        self._buffer_started_at: float | None = None
 
     @property
     def is_connected(self) -> bool:
@@ -59,6 +64,7 @@ class ScannerTCP:
             sock.settimeout(self.timeout_seconds)
             self._sock = sock
             self._buffer = ""
+            self._buffer_started_at = None
             self.logger.info("%s conectado en %s:%s", self.name, self.ip, self.port)
             return True
         except OSError:
@@ -73,16 +79,76 @@ class ScannerTCP:
             except OSError:
                 self.logger.exception("Error cerrando socket de %s", self.name)
         self._sock = None
+        self._buffer = ""
+        self._buffer_started_at = None
 
     def reconnect(self) -> bool:
         return self.connect()
 
+    def read_available(self, incomplete_idle_seconds: float = 0.15) -> ScannerReadResult | None:
+        """Revisa si hay una lectura disponible sin bloquear el ciclo principal.
+
+        Regresa None si no hay datos completos todavía.
+        Si hay CR/LF/CRLF, separa primero y toma solo la primera lectura útil.
+        Si llega una lectura sin delimitador, se devuelve solo después de un pequeño
+        tiempo de inactividad para evitar validar fragmentos parciales.
+        """
+        if self._sock is None:
+            raise ConnectionError(f"{self.name} no está conectado")
+
+        first, discarded, had_delimiter = self._extract_first_from_buffer()
+        if first is not None:
+            return self._build_result(first, first, discarded, had_delimiter)
+
+        raw_accumulated = ""
+        old_timeout = self._sock.gettimeout()
+        try:
+            self._sock.settimeout(0.0)
+            while True:
+                try:
+                    data = self._sock.recv(1024)
+                except (BlockingIOError, socket.timeout):
+                    break
+                except OSError as exc:
+                    self.close()
+                    raise ConnectionError(f"Conexión perdida con {self.name}: {exc}") from exc
+
+                if not data:
+                    self.close()
+                    raise ConnectionError(f"{self.name} cerró la conexión TCP")
+
+                text = data.decode("utf-8", errors="replace")
+                raw_accumulated += text
+                if not self._buffer:
+                    self._buffer_started_at = time.monotonic()
+                self._buffer += text
+                self.logger.debug("%s paquete crudo: %r", self.name, text)
+
+                first, discarded, had_delimiter = self._extract_first_from_buffer()
+                if first is not None:
+                    return self._build_result(first, raw_accumulated, discarded, had_delimiter)
+        finally:
+            if self._sock is not None:
+                self._sock.settimeout(old_timeout)
+
+        # Si quedó información sin delimitador, no inventamos cortes inmediatos.
+        # Se entrega después de un pequeño idle; el validador decidirá si es válida,
+        # larga, token de error, etc. Nunca se recorta para hacerla válida.
+        if self._buffer.strip() and self._buffer_started_at is not None:
+            elapsed = time.monotonic() - self._buffer_started_at
+            if elapsed >= float(incomplete_idle_seconds):
+                pending = self._buffer.strip()
+                self._buffer = ""
+                self._buffer_started_at = None
+                return self._build_result(pending, raw_accumulated or pending, [], False)
+
+        return None
+
     def read_first(self, timeout_seconds: float) -> ScannerReadResult:
         """Lee hasta obtener la primera lectura útil o agotar timeout.
 
-        Si llegan múltiples lecturas en el mismo paquete, se conserva la primera no vacía
-        y se reportan las demás como descartadas. Si llega una cadena sin delimitadores,
-        se devuelve al vencer el timeout y el validador decidirá por longitud/token.
+        Conservado por compatibilidad, pero para el flujo real se prefiere
+        read_available() + CycleManager.poll().
         """
         if self._sock is None:
             raise ConnectionError(f"{self.name} no está conectado")
@@ -91,45 +157,27 @@ class ScannerTCP:
         raw_accumulated = ""
 
         while time.monotonic() < deadline:
-            first, discarded, had_delimiter = self._extract_first_from_buffer()
-            if first is not None:
-                return self._build_result(first, raw_accumulated, discarded, had_delimiter)
+            result = self.read_available(incomplete_idle_seconds=0.15)
+            if result is not None:
+                return result
+            time.sleep(0.01)
 
-            try:
-                data = self._sock.recv(1024)
-            except socket.timeout:
-                continue
-            except OSError as exc:
-                self.close()
-                raise ConnectionError(f"Conexión perdida con {self.name}: {exc}") from exc
-
-            if not data:
-                self.close()
-                raise ConnectionError(f"{self.name} cerró la conexión TCP")
-
-            text = data.decode("utf-8", errors="replace")
-            raw_accumulated += text
-            self._buffer += text
-            self.logger.debug("%s paquete crudo: %r", self.name, text)
-
-        # Si no hubo terminador, no inventamos cortes. Se entrega tal cual para validar.
         pending = self._buffer.strip()
         self._buffer = ""
+        self._buffer_started_at = None
         if pending:
-            reading = ScannerReading(
-                side=self.side,
-                raw=pending,
-                code=pending,
-                length=len(pending),
-                received_at=datetime.now(),
-            )
-            return ScannerReadResult(reading, raw_accumulated or pending, [], False)
+            return self._build_result(pending, raw_accumulated or pending, [], False)
         return ScannerReadResult(None, raw_accumulated, [], False)
 
     def clear_buffer(self) -> list[str]:
         """Drena lecturas tardías después del ciclo/cooldown."""
         discarded: list[str] = []
+        if self._buffer.strip():
+            parts = [p.strip() for p in _TERMINATOR_RE.split(self._buffer) if p.strip()]
+            discarded.extend(parts or [self._buffer.strip()])
         self._buffer = ""
+        self._buffer_started_at = None
+
         if self._sock is None:
             return discarded
 
@@ -140,6 +188,8 @@ class ScannerTCP:
                 try:
                     data = self._sock.recv(1024)
                 except socket.timeout:
+                    break
+                except BlockingIOError:
                     break
                 if not data:
                     self.close()
@@ -162,6 +212,7 @@ class ScannerTCP:
 
         parts = [p.strip() for p in _TERMINATOR_RE.split(self._buffer) if p.strip()]
         self._buffer = ""
+        self._buffer_started_at = None
         if not parts:
             return None, [], True
         return parts[0], parts[1:], True
@@ -173,11 +224,12 @@ class ScannerTCP:
         discarded: list[str],
         had_delimiter: bool,
     ) -> ScannerReadResult:
+        clean = first.strip()
         reading = ScannerReading(
             side=self.side,
             raw=first,
-            code=first.strip(),
-            length=len(first.strip()),
+            code=clean,
+            length=len(clean),
             received_at=datetime.now(),
         )
         return ScannerReadResult(reading, raw_packet or first, discarded, had_delimiter)

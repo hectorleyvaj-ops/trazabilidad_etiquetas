@@ -2,7 +2,7 @@
   "app": {
     "title": "Sistema de trazabilidad con doble scanner y PLC",
     "auto_start": false,
-    "simulation_enabled": true
+    "simulation_enabled": false
   },
   "scanners": {
     "right": {
@@ -36,20 +36,31 @@
   },
   "validation": {
     "expected_length": 22,
-    "scanner_error_tokens": ["ERROR", "NG", "NOREAD", "NO READ", "NO_READ"]
+    "scanner_error_tokens": [
+      "ERROR",
+      "NG",
+      "NOREAD",
+      "NO READ",
+      "NO_READ"
+    ]
   },
   "cycle": {
     "read_timeout_ms": 3000,
     "cooldown_ms": 1000,
     "accept_first_useful_reading_only": true,
-    "clear_buffers_after_cycle": true
+    "clear_buffers_after_cycle": true,
+    "read_poll_interval_ms": 50,
+    "plc_signal_hold_ms": 2000,
+    "pair_timeout_ms": 3000,
+    "incomplete_packet_idle_ms": 150
   },
   "simulation": {
     "cycle_interval_ms": 3500
   },
   "storage": {
     "excel_path": "data/base_datos_produccion.xlsx",
-    "sqlite_path": "data/trazabilidad.db"
+    "sqlite_path": "data/trazabilidad.db",
+    "include_error_rows_in_duplicates": false
   },
   "logging": {
     "level": "INFO",

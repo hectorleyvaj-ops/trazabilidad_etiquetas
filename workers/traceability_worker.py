@@ -63,8 +63,9 @@ class TraceabilityWorker(QObject):
 
         self._timer = QTimer(self)
         self._timer.setInterval(int(self.config.get("cycle", {}).get("read_poll_interval_ms", 50)))
-        self._timer.timeout.connect(self._run_real_cycle)
+        self._timer.timeout.connect(self._poll_real_system)
         self._timer.start()
+        self.system_status_changed.emit("ESPERANDO LECTURAS")
 
     @Slot()
     def stop(self) -> None:
@@ -101,17 +102,18 @@ class TraceabilityWorker(QObject):
         self._simulate_cycle()
 
     @Slot()
-    def _run_real_cycle(self) -> None:
+    def _poll_real_system(self) -> None:
+        """Escucha sockets y avanza ciclos solo cuando llegan lecturas reales."""
         if not self._running or self._busy or self._manager is None:
             return
         self._busy = True
         try:
-            cycle = self._manager.run_once()
+            cycle = self._manager.poll()
             if cycle is not None:
                 self.cycle_result.emit(cycle)
         except Exception:
-            logger.exception("Error no controlado en ciclo real")
-            self._emit_log("ERROR", "Error no controlado en ciclo real. Revisa logs/trazabilidad.log.")
+            logger.exception("Error no controlado en polling real")
+            self._emit_log("ERROR", "Error no controlado en polling real. Revisa logs/trazabilidad.log.")
             self.system_status_changed.emit("ERROR DE CONEXIÓN")
         finally:
             self._busy = False

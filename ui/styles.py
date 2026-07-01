@@ -36,6 +36,9 @@ QPlainTextEdit {
 STATUS_COLORS = {
     "ESPERANDO": "rgb(120, 130, 145)",
     "LECTURA OK": "rgb(38, 166, 91)",
+    "LECTURA RECIBIDA": "rgb(43, 120, 220)",
+    "ESPERANDO SEGUNDA LECTURA": "rgb(43, 120, 220)",
+    "TIMEOUT LECTURA": "rgb(210, 63, 63)",
     "NUEVO": "rgb(38, 166, 91)",
     "OK": "rgb(38, 166, 91)",
     "OK GENERAL": "rgb(38, 166, 91)",
