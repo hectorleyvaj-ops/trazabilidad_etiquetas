@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QThread, QTimer, Signal, Slot
+from PySide6.QtCore import Qt, QThread, QTimer, Signal, Slot
 from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
     QMainWindow,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
@@ -18,17 +17,15 @@ from PySide6.QtWidgets import (
 
 from core.models import CycleResult, GeneralResult, NestSide
 from ui.styles import APP_STYLESHEET, app_background_style, result_panel_style
-from ui.widgets import ConnectionPill, SensorCard, SensorCounterStrip
+from ui.widgets import ConnectionAlertDialog, ConnectionPill, ProductionCounterStrip, SensorCard
 from workers.traceability_worker import TraceabilityWorker
 
 
 class MainWindow(QMainWindow):
-    """Ventana principal V5 para operador.
+    """Ventana principal V8: panel industrial minimalista.
 
-    Está basada visualmente en la idea del panel oscuro del script Tkinter
-    compartido por el usuario, pero mantiene la arquitectura PySide6 modular:
-    la interfaz solo visualiza señales; no lee sockets, no escribe Excel y no
-    manda comandos al PLC.
+    La interfaz es una capa de visualización: no lee sockets, no escribe Excel
+    y no envía datos al PLC. Solo recibe señales del worker.
     """
 
     start_requested = Signal()
@@ -40,19 +37,18 @@ class MainWindow(QMainWindow):
         self.config = config
         self.base_dir = base_dir
 
-        self.right_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
-        self.left_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
+        self.production_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
         self.connection_states = {
             "PLC": False,
             "Scanner derecho": False,
             "Scanner izquierdo": False,
         }
-        self.connection_alerts: dict[str, QMessageBox] = {}
+        self.connection_alerts: dict[str, ConnectionAlertDialog] = {}
         self.notified_disconnected_devices: set[str] = set()
 
         self.setWindowTitle(config["app"].get("title", "Sistema de trazabilidad"))
-        self.resize(1180, 720)
-        self.setMinimumSize(980, 620)
+        self.resize(1220, 760)
+        self.setMinimumSize(1080, 660)
         self.setStyleSheet(APP_STYLESHEET)
 
         self._build_ui()
@@ -66,47 +62,42 @@ class MainWindow(QMainWindow):
         self.root_widget = QWidget()
         self.root_widget.setObjectName("appRoot")
         root = QVBoxLayout(self.root_widget)
-        root.setContentsMargins(20, 16, 20, 16)
-        root.setSpacing(12)
+        root.setContentsMargins(22, 18, 22, 16)
+        root.setSpacing(13)
 
-        # Panel superior: resultado directo + contadores por sensor, sin títulos redundantes.
+        # Header: resultado dominante + contadores globales. Sin títulos redundantes.
         self.result_panel = QFrame()
         self.result_panel.setStyleSheet(result_panel_style("ESPERANDO"))
-        result_layout = QHBoxLayout(self.result_panel)
+        result_layout = QVBoxLayout(self.result_panel)
         result_layout.setContentsMargins(24, 16, 24, 16)
-        result_layout.setSpacing(16)
+        result_layout.setSpacing(10)
 
-        self.cycle_result_label = QLabel("ESPERANDO")
+        self.cycle_result_label = QLabel("INICIANDO")
+        self.cycle_result_label.setAlignment(Qt.AlignCenter)
         self.cycle_result_label.setStyleSheet(
-            "font-size: 54px; font-weight: 950; letter-spacing: 1px; "
+            "font-size: 56px; font-weight: 950; letter-spacing: 1.2px; "
             "border: none; background: transparent;"
         )
-        self.cycle_result_label.setMinimumHeight(74)
+        self.cycle_result_label.setMinimumHeight(62)
 
-        self.left_counter_strip = SensorCounterStrip("IZQ")
-        self.right_counter_strip = SensorCounterStrip("DER")
+        self.counter_strip = ProductionCounterStrip()
 
-        counters_col = QVBoxLayout()
-        counters_col.setSpacing(8)
-        counters_col.addWidget(self.left_counter_strip)
-        counters_col.addWidget(self.right_counter_strip)
+        result_layout.addWidget(self.cycle_result_label)
+        result_layout.addWidget(self.counter_strip)
 
-        result_layout.addWidget(self.cycle_result_label, stretch=3)
-        result_layout.addLayout(counters_col, stretch=5)
-
-        # Panel central: dos nidos, indicadores grandes y texto mínimo.
+        # Centro: dos tarjetas limpias para nidos.
         self.left_card = SensorCard("NIDO IZQUIERDO")
         self.right_card = SensorCard("NIDO DERECHO")
 
         cards_row = QHBoxLayout()
-        cards_row.setSpacing(18)
+        cards_row.setSpacing(20)
         cards_row.addWidget(self.left_card)
         cards_row.addWidget(self.right_card)
 
-        # Fila inferior: conexiones discretas + controles mínimos.
+        # Inferior: estado discreto de conexiones, último evento y controles mínimos.
         self.plc_pill = ConnectionPill("PLC")
-        self.left_pill = ConnectionPill("Izquierdo")
-        self.right_pill = ConnectionPill("Derecho")
+        self.left_pill = ConnectionPill("IZQ")
+        self.right_pill = ConnectionPill("DER")
 
         connections_row = QHBoxLayout()
         connections_row.setSpacing(8)
@@ -114,11 +105,19 @@ class MainWindow(QMainWindow):
         connections_row.addWidget(self.left_pill)
         connections_row.addWidget(self.right_pill)
 
+        self.last_event_label = QLabel("")
+        self.last_event_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+        self.last_event_label.setWordWrap(False)
+        self.last_event_label.setStyleSheet(
+            "font-size: 13px; color: rgba(226, 232, 240, 0.74); "
+            "font-weight: 650; border: none; background: transparent; padding-left: 8px;"
+        )
+
         self.stop_button = QPushButton("Detener")
         self.stop_button.setObjectName("dangerButton")
         self.start_button = QPushButton("Reanudar")
         self.start_button.setObjectName("primaryButton")
-        self.reset_counters_button = QPushButton("Reiniciar contadores")
+        self.reset_counters_button = QPushButton("Reiniciar")
         self.clear_log_button = QPushButton("Limpiar log")
         self.simulate_button = QPushButton("Simular")
 
@@ -135,20 +134,20 @@ class MainWindow(QMainWindow):
 
         footer_row = QHBoxLayout()
         footer_row.setSpacing(12)
-        footer_row.addLayout(connections_row, stretch=4)
-        footer_row.addStretch(1)
-        footer_row.addLayout(buttons_row, stretch=4)
+        footer_row.addLayout(connections_row, stretch=0)
+        footer_row.addWidget(self.last_event_label, stretch=1)
+        footer_row.addLayout(buttons_row, stretch=0)
 
         self.log_view = QPlainTextEdit()
         self.log_view.setReadOnly(True)
         self.log_view.setMaximumBlockCount(100)
-        self.log_view.setFixedHeight(58)
+        self.log_view.setFixedHeight(64)
         self.log_view.setPlaceholderText("Eventos recientes...")
 
-        root.addWidget(self.result_panel)
+        root.addWidget(self.result_panel, stretch=0)
         root.addLayout(cards_row, stretch=1)
-        root.addLayout(footer_row)
-        root.addWidget(self.log_view)
+        root.addLayout(footer_row, stretch=0)
+        root.addWidget(self.log_view, stretch=0)
 
         self.setCentralWidget(self.root_widget)
 
@@ -200,17 +199,40 @@ class MainWindow(QMainWindow):
 
     @Slot(str)
     def on_system_status_changed(self, status: str) -> None:
-        # La pantalla superior queda enfocada al resultado del ciclo, no al estado técnico.
         self._apply_system_theme(status)
+
+        # No borrar inmediatamente el último OK/ERROR cuando el ciclo termina.
         if status == "DETENIDO":
             self.cycle_result_label.setText("DETENIDO")
             self.result_panel.setStyleSheet(result_panel_style(status))
             self._set_all_connections(False)
             self.right_card.reset()
             self.left_card.reset()
-        elif status in {"ESPERANDO LECTURAS", "INICIANDO", "LISTO"} and self.cycle_result_label.text() in {"DETENIDO", "INICIANDO"}:
-            self.cycle_result_label.setText("ESPERANDO")
-            self.result_panel.setStyleSheet(result_panel_style("ESPERANDO"))
+            return
+
+        if status in {"INICIANDO"}:
+            self.cycle_result_label.setText("INICIANDO")
+            self.result_panel.setStyleSheet(result_panel_style(status))
+            return
+
+        if status in {"SIN PLC", "SIN SCANNER DERECHO", "SIN SCANNER IZQUIERDO", "ERROR DE CONEXIÓN", "SIN CONEXIÓN"}:
+            self.cycle_result_label.setText("SIN CONEXIÓN")
+            self.result_panel.setStyleSheet(result_panel_style("SIN CONEXIÓN"))
+            return
+
+        if status == "ESPERANDO SEGUNDA LECTURA":
+            self.cycle_result_label.setText("LEYENDO")
+            self.result_panel.setStyleSheet(result_panel_style(status))
+            return
+
+        if status in {"VALIDANDO", "REGISTRANDO", "ENVIANDO OK AL PLC", "ENVIANDO ERROR AL PLC", "RESET PLC"}:
+            self.cycle_result_label.setText(self._friendly_system_status(status))
+            self.result_panel.setStyleSheet(result_panel_style(status))
+            return
+
+        if status in {"ESPERANDO LECTURAS", "LISTO"} and self.cycle_result_label.text() in {"INICIANDO", "DETENIDO", "SIN CONEXIÓN"}:
+            self.cycle_result_label.setText("LISTO")
+            self.result_panel.setStyleSheet(result_panel_style("ESPERANDO LECTURAS"))
 
     @Slot(str, str)
     def on_log_message(self, level: str, message: str) -> None:
@@ -228,50 +250,49 @@ class MainWindow(QMainWindow):
         self._append_log(level, f"{device}: {state} ({message})")
 
         if not connected:
+            self.cycle_result_label.setText("SIN CONEXIÓN")
+            self.result_panel.setStyleSheet(result_panel_style("SIN CONEXIÓN"))
             self._apply_system_theme("SIN CONEXIÓN")
             self._show_connection_popup(normalized or device, message)
         else:
             self._close_connection_popup(normalized or device)
+            if all(self.connection_states.values()) and self.cycle_result_label.text() in {"SIN CONEXIÓN", "INICIANDO"}:
+                self.cycle_result_label.setText("LISTO")
+                self.result_panel.setStyleSheet(result_panel_style("ESPERANDO LECTURAS"))
+                self._apply_system_theme("ESPERANDO LECTURAS")
 
     @Slot()
     def reset_counters(self) -> None:
-        self.right_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
-        self.left_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
+        self.production_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
         self._refresh_counter_labels()
         self._append_log("INFO", "Contadores reiniciados desde interfaz.")
 
     def _update_counters(self, result: CycleResult) -> None:
-        self._update_sensor_counter(result.right, self.right_counts)
-        self._update_sensor_counter(result.left, self.left_counts)
+        # Un solo bloque de contadores. Cada sensor evaluado incrementa el total.
+        self._update_single_counter(result.left)
+        self._update_single_counter(result.right)
         self._refresh_counter_labels()
 
-    @staticmethod
-    def _update_sensor_counter(side_result, counters: dict[str, int]) -> None:
+    def _update_single_counter(self, side_result) -> None:
         if side_result is None:
             return
 
         status = side_result.status.value
-        counters["total"] += 1
+        self.production_counts["total"] += 1
 
         if status in {"NUEVO", "OK"}:
-            counters["good"] += 1
+            self.production_counts["good"] += 1
         elif status == "DUPLICADO":
-            counters["duplicate"] += 1
+            self.production_counts["duplicate"] += 1
         elif status in {"ERROR SCANNER", "ERROR LONGITUD"}:
-            counters["read_error"] += 1
+            self.production_counts["read_error"] += 1
 
     def _refresh_counter_labels(self) -> None:
-        self.left_counter_strip.set_values(
-            self.left_counts["total"],
-            self.left_counts["good"],
-            self.left_counts["duplicate"],
-            self.left_counts["read_error"],
-        )
-        self.right_counter_strip.set_values(
-            self.right_counts["total"],
-            self.right_counts["good"],
-            self.right_counts["duplicate"],
-            self.right_counts["read_error"],
+        self.counter_strip.set_values(
+            self.production_counts["total"],
+            self.production_counts["good"],
+            self.production_counts["duplicate"],
+            self.production_counts["read_error"],
         )
 
     def _normalize_device_name(self, device: str) -> str | None:
@@ -301,17 +322,7 @@ class MainWindow(QMainWindow):
         if device in self.notified_disconnected_devices:
             return
         self.notified_disconnected_devices.add(device)
-        detail = message or "No se pudo establecer comunicación."
-        box = QMessageBox(self)
-        box.setIcon(QMessageBox.Critical)
-        box.setWindowTitle("Error de conexión")
-        box.setText(f"{device} sin conexión")
-        box.setInformativeText(
-            "Revisa alimentación, cableado, red, puerto configurado y que el dispositivo esté encendido.\n\n"
-            f"Detalle: {detail}"
-        )
-        box.setStandardButtons(QMessageBox.Ok)
-        box.setModal(False)
+        box = ConnectionAlertDialog(device=device, detail=message, parent=self)
         box.finished.connect(lambda _result, name=device: self.connection_alerts.pop(name, None))
         self.connection_alerts[device] = box
         box.show()
@@ -325,7 +336,7 @@ class MainWindow(QMainWindow):
     @staticmethod
     def _friendly_general_result(result: GeneralResult) -> str:
         labels = {
-            GeneralResult.WAITING: "ESPERANDO",
+            GeneralResult.WAITING: "LISTO",
             GeneralResult.OK: "OK",
             GeneralResult.ERROR: "ERROR",
             GeneralResult.DUPLICATE: "DUPLICADO",
@@ -335,10 +346,22 @@ class MainWindow(QMainWindow):
         }
         return labels.get(result, result.value)
 
+    @staticmethod
+    def _friendly_system_status(status: str) -> str:
+        labels = {
+            "VALIDANDO": "VALIDANDO",
+            "REGISTRANDO": "GUARDANDO",
+            "ENVIANDO OK AL PLC": "OK → PLC",
+            "ENVIANDO ERROR AL PLC": "ERROR → PLC",
+            "RESET PLC": "RESET PLC",
+        }
+        return labels.get(status, status)
+
     def _apply_system_theme(self, status: str) -> None:
         self.root_widget.setStyleSheet(app_background_style(status))
 
     def _append_log(self, level: str, message: str) -> None:
+        self.last_event_label.setText(f"[{level}] {message}")
         self.log_view.appendPlainText(f"[{level}] {message}")
         self.log_view.moveCursor(QTextCursor.End)
 

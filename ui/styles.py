@@ -1,40 +1,41 @@
 from __future__ import annotations
 
-# Paleta V5: oscuro industrial, alto contraste y acentos sobrios.
-# Mantiene colores de producción claros sin saturar toda la pantalla.
+# Paleta V8: panel industrial oscuro, minimalista y legible.
+# La interfaz usa acentos de color para comunicar estado sin saturar toda la pantalla.
 COLOR = {
-    "neutral": "rgb(113, 124, 139)",      # gris técnico
-    "info": "rgb(54, 132, 245)",         # azul proceso/listo
+    "neutral": "rgb(100, 116, 139)",      # gris espera/detenido
+    "info": "rgb(14, 165, 164)",         # teal lectura/proceso
     "ok": "rgb(34, 197, 94)",            # verde OK
-    "warning": "rgb(245, 158, 11)",      # ámbar duplicado/warning
-    "error": "rgb(239, 68, 68)",         # rojo error de lectura/código
-    "critical": "rgb(185, 28, 28)",      # rojo oscuro desconexión
-    "cooldown": "rgb(20, 184, 166)",     # teal limpieza/cooldown
+    "warning": "rgb(245, 158, 11)",      # ámbar duplicado
+    "error": "rgb(239, 68, 68)",         # rojo error lectura/código
+    "critical": "rgb(153, 27, 27)",      # rojo oscuro desconexión
+    "cooldown": "rgb(56, 189, 248)",     # azul limpieza/cooldown
 }
 
 BACKGROUND = {
-    "neutral": (13, 18, 28),
-    "info": (10, 30, 58),
-    "ok": (7, 45, 32),
-    "warning": (61, 41, 9),
+    "neutral": (15, 23, 32),
+    "info": (10, 37, 45),
+    "ok": (8, 45, 32),
+    "warning": (61, 43, 13),
     "error": (67, 20, 25),
     "critical": (42, 8, 13),
-    "cooldown": (8, 45, 53),
+    "cooldown": (8, 40, 58),
 }
 
-SURFACE = "rgba(15, 23, 42, 0.78)"
-SURFACE_SOFT = "rgba(255, 255, 255, 0.075)"
-TEXT = "rgb(241, 245, 249)"
-TEXT_MUTED = "rgba(226, 232, 240, 0.72)"
+TEXT = "rgb(243, 246, 248)"
+TEXT_MUTED = "rgba(226, 232, 240, 0.68)"
+SURFACE = "rgba(24, 34, 48, 0.84)"
+SURFACE_DEEP = "rgba(10, 16, 25, 0.72)"
+BORDER_SOFT = "rgba(148, 163, 184, 0.18)"
 
 STATUS_KIND = {
     "DETENIDO": "neutral",
     "ESPERANDO": "neutral",
-    "ESPERANDO LECTURAS": "info",
+    "ESPERANDO LECTURAS": "neutral",
+    "LISTO": "neutral",
+    "INICIANDO": "info",
     "ESPERANDO SEGUNDA LECTURA": "info",
     "LECTURA RECIBIDA": "info",
-    "LISTO": "info",
-    "INICIANDO": "info",
     "VALIDANDO": "info",
     "REGISTRANDO": "info",
     "RESET PLC": "info",
@@ -62,7 +63,7 @@ STATUS_KIND = {
 
 APP_STYLESHEET = f"""
 QMainWindow {{
-    background-color: rgb(13, 18, 28);
+    background-color: rgb(15, 23, 32);
 }}
 QWidget {{
     color: {TEXT};
@@ -74,44 +75,39 @@ QLabel {{
     background: transparent;
 }}
 QPushButton {{
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.075);
     color: {TEXT};
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 11px;
-    padding: 10px 16px;
-    font-size: 13px;
-    font-weight: 700;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 10px;
+    padding: 8px 13px;
+    font-size: 12px;
+    font-weight: 750;
 }}
 QPushButton:hover {{
-    background-color: rgba(255, 255, 255, 0.14);
+    background-color: rgba(255, 255, 255, 0.13);
 }}
 QPushButton:pressed {{
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: rgba(255, 255, 255, 0.055);
 }}
 QPushButton#primaryButton {{
-    background-color: rgb(54, 132, 245);
-    color: white;
-    border: none;
+    background-color: rgba(14, 165, 164, 0.22);
+    border: 1px solid rgba(14, 165, 164, 0.55);
 }}
 QPushButton#dangerButton {{
-    background-color: rgba(239, 68, 68, 0.20);
-    border: 1px solid rgba(239, 68, 68, 0.52);
+    background-color: rgba(153, 27, 27, 0.24);
+    border: 1px solid rgba(239, 68, 68, 0.48);
 }}
 QPlainTextEdit {{
-    background-color: rgba(2, 6, 23, 0.52);
-    color: rgba(226, 232, 240, 0.84);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background-color: rgba(2, 6, 23, 0.42);
+    color: rgba(226, 232, 240, 0.78);
+    border: 1px solid rgba(148, 163, 184, 0.14);
     border-radius: 12px;
-    padding: 8px;
-    font-family: Consolas, monospace;
+    padding: 7px 9px;
+    font-family: Consolas, Cascadia Mono, monospace;
     font-size: 10px;
 }}
-QMessageBox {{
-    background-color: rgb(15, 23, 42);
-}}
-QMessageBox QLabel {{
-    color: {TEXT};
-    font-size: 14px;
+QDialog {{
+    background-color: rgb(42, 8, 13);
 }}
 """
 
@@ -132,7 +128,7 @@ def app_background_style(status: str) -> str:
         background-color: qlineargradient(
             x1: 0, y1: 0, x2: 1, y2: 1,
             stop: 0 rgb({r}, {g}, {b}),
-            stop: 0.62 rgb(13, 18, 28),
+            stop: 0.50 rgb(15, 23, 32),
             stop: 1 rgb(2, 6, 23)
         );
     }}
@@ -140,13 +136,16 @@ def app_background_style(status: str) -> str:
 
 
 def result_panel_style(status: str) -> str:
-    # Panel superior sin borde: solo informa el resultado y los contadores.
-    return """
-    QFrame {
-        background-color: rgba(15, 23, 42, 0.58);
-        border: none;
-        border-radius: 24px;
-    }
+    kind = kind_for_status(status)
+    color = COLOR[kind]
+    r, g, b = BACKGROUND[kind]
+    return f"""
+    QFrame {{
+        background-color: rgba({r}, {g}, {b}, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: 6px solid {color};
+        border-radius: 26px;
+    }}
     """
 
 
@@ -154,8 +153,9 @@ def card_style(status: str) -> str:
     color = color_for_status(status)
     return f"""
     QFrame {{
-        background-color: rgba(15, 23, 42, 0.78);
-        border: 3px solid {color};
+        background-color: {SURFACE};
+        border: 1px solid {BORDER_SOFT};
+        border-top: 7px solid {color};
         border-radius: 28px;
     }}
     """
@@ -166,12 +166,12 @@ def indicator_style(status: str) -> str:
     return f"""
     QLabel {{
         background-color: {color};
-        border: 8px solid rgba(255, 255, 255, 0.34);
-        border-radius: 62px;
-        min-width: 124px;
-        max-width: 124px;
-        min-height: 124px;
-        max-height: 124px;
+        border: 10px solid rgba(255, 255, 255, 0.30);
+        border-radius: 72px;
+        min-width: 144px;
+        max-width: 144px;
+        min-height: 144px;
+        max-height: 144px;
     }}
     """
 
@@ -181,33 +181,19 @@ def result_text_style(status: str) -> str:
     return f"""
     QLabel {{
         color: {color};
-        font-size: 24px;
+        font-size: 28px;
         font-weight: 950;
-        letter-spacing: 0.8px;
+        letter-spacing: 0.7px;
         border: none;
         background: transparent;
     }}
     """
 
 
-def counter_card_style(kind: str) -> str:
-    color = COLOR.get(kind, COLOR["neutral"])
-    return f"""
-    QFrame {{
-        background-color: rgba(255, 255, 255, 0.078);
-        border: 1px solid rgba(255, 255, 255, 0.13);
-        border-bottom: 5px solid {color};
-        border-radius: 18px;
-    }}
-    """
-
-
-
-
-def sensor_counter_strip_style() -> str:
+def production_counter_strip_style() -> str:
     return """
     QFrame {
-        background-color: rgba(255, 255, 255, 0.055);
+        background-color: rgba(2, 6, 23, 0.24);
         border: none;
         border-radius: 18px;
     }
@@ -218,8 +204,8 @@ def stat_chip_style(kind: str) -> str:
     color = COLOR.get(kind, COLOR["neutral"])
     return f"""
     QFrame {{
-        background-color: rgba(2, 6, 23, 0.42);
-        border: none;
+        background-color: rgba(2, 6, 23, 0.34);
+        border: 1px solid rgba(148, 163, 184, 0.10);
         border-bottom: 4px solid {color};
         border-radius: 14px;
     }}
@@ -228,12 +214,12 @@ def stat_chip_style(kind: str) -> str:
 
 def connection_pill_style(connected: bool) -> str:
     color = COLOR["ok"] if connected else COLOR["critical"]
-    background = "rgba(34, 197, 94, 0.14)" if connected else "rgba(185, 28, 28, 0.18)"
     return f"""
     QFrame {{
-        background-color: {background};
-        border: 1px solid {color};
-        border-radius: 14px;
+        background-color: rgba(2, 6, 23, 0.30);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 12px;
+        border-left: 4px solid {color};
     }}
     """
 
@@ -248,5 +234,31 @@ def small_dot_style(connected: bool) -> str:
         max-width: 14px;
         min-height: 14px;
         max-height: 14px;
+    }}
+    """
+
+
+def alert_dialog_style() -> str:
+    return f"""
+    QDialog {{
+        background-color: rgb(42, 8, 13);
+        border: 2px solid rgba(239, 68, 68, 0.72);
+        border-radius: 18px;
+    }}
+    QLabel {{
+        color: white;
+        border: none;
+        background: transparent;
+    }}
+    QPushButton {{
+        background-color: rgba(255, 255, 255, 0.12);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 10px;
+        padding: 9px 18px;
+        font-weight: 800;
+    }}
+    QPushButton:hover {{
+        background-color: rgba(255, 255, 255, 0.18);
     }}
     """
