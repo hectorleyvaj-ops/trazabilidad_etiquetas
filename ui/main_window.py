@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 
 from core.models import CycleResult, GeneralResult, NestSide
 from ui.styles import APP_STYLESHEET, app_background_style, result_panel_style
-from ui.widgets import ConnectionPill, CounterCard, SensorCard
+from ui.widgets import ConnectionPill, SensorCard, SensorCounterStrip
 from workers.traceability_worker import TraceabilityWorker
 
 
@@ -40,10 +40,8 @@ class MainWindow(QMainWindow):
         self.config = config
         self.base_dir = base_dir
 
-        self.good_count = 0
-        self.duplicate_count = 0
-        self.read_error_count = 0
-        self.total_count = 0
+        self.right_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
+        self.left_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
         self.connection_states = {
             "PLC": False,
             "Scanner derecho": False,
@@ -71,38 +69,30 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(20, 16, 20, 16)
         root.setSpacing(12)
 
-        # Panel superior: SOLO resultado de ciclo + contadores.
+        # Panel superior: resultado directo + contadores por sensor, sin títulos redundantes.
         self.result_panel = QFrame()
         self.result_panel.setStyleSheet(result_panel_style("ESPERANDO"))
         result_layout = QHBoxLayout(self.result_panel)
-        result_layout.setContentsMargins(24, 18, 24, 18)
-        result_layout.setSpacing(18)
+        result_layout.setContentsMargins(24, 16, 24, 16)
+        result_layout.setSpacing(16)
 
-        result_caption = QLabel("RESULTADO DEL CICLO")
-        result_caption.setStyleSheet("font-size: 14px; color: rgba(226, 232, 240, 0.70); font-weight: 900;")
         self.cycle_result_label = QLabel("ESPERANDO")
-        self.cycle_result_label.setStyleSheet("font-size: 50px; font-weight: 950; letter-spacing: 1px;")
-        self.cycle_result_label.setMinimumHeight(64)
+        self.cycle_result_label.setStyleSheet(
+            "font-size: 54px; font-weight: 950; letter-spacing: 1px; "
+            "border: none; background: transparent;"
+        )
+        self.cycle_result_label.setMinimumHeight(74)
 
-        result_text_col = QVBoxLayout()
-        result_text_col.setSpacing(0)
-        result_text_col.addWidget(result_caption)
-        result_text_col.addWidget(self.cycle_result_label)
+        self.left_counter_strip = SensorCounterStrip("IZQ")
+        self.right_counter_strip = SensorCounterStrip("DER")
 
-        self.total_counter = CounterCard("TOTAL EVALUADAS", "info")
-        self.good_counter = CounterCard("BUENAS", "ok")
-        self.duplicate_counter = CounterCard("DUPLICADAS", "warning")
-        self.read_error_counter = CounterCard("ERRORES DE LECTURA", "error")
+        counters_col = QVBoxLayout()
+        counters_col.setSpacing(8)
+        counters_col.addWidget(self.left_counter_strip)
+        counters_col.addWidget(self.right_counter_strip)
 
-        counters_row = QHBoxLayout()
-        counters_row.setSpacing(10)
-        counters_row.addWidget(self.total_counter)
-        counters_row.addWidget(self.good_counter)
-        counters_row.addWidget(self.duplicate_counter)
-        counters_row.addWidget(self.read_error_counter)
-
-        result_layout.addLayout(result_text_col, stretch=3)
-        result_layout.addLayout(counters_row, stretch=5)
+        result_layout.addWidget(self.cycle_result_label, stretch=3)
+        result_layout.addLayout(counters_col, stretch=5)
 
         # Panel central: dos nidos, indicadores grandes y texto mínimo.
         self.left_card = SensorCard("NIDO IZQUIERDO")
@@ -245,43 +235,44 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def reset_counters(self) -> None:
-        self.good_count = 0
-        self.duplicate_count = 0
-        self.read_error_count = 0
-        self.total_count = 0
+        self.right_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
+        self.left_counts = {"total": 0, "good": 0, "duplicate": 0, "read_error": 0}
         self._refresh_counter_labels()
         self._append_log("INFO", "Contadores reiniciados desde interfaz.")
 
     def _update_counters(self, result: CycleResult) -> None:
-        self.total_count += 1
-        if result.general_result == GeneralResult.OK:
-            self.good_count += 1
-        if result.general_result == GeneralResult.DUPLICATE or self._has_duplicate(result):
-            self.duplicate_count += 1
-        if result.general_result in {GeneralResult.READ_ERROR, GeneralResult.LENGTH_ERROR} or self._has_sensor_read_error(result):
-            self.read_error_count += 1
+        self._update_sensor_counter(result.right, self.right_counts)
+        self._update_sensor_counter(result.left, self.left_counts)
         self._refresh_counter_labels()
 
     @staticmethod
-    def _has_duplicate(result: CycleResult) -> bool:
-        for side_result in (result.right, result.left):
-            if side_result is not None and side_result.status.value == "DUPLICADO":
-                return True
-        return False
+    def _update_sensor_counter(side_result, counters: dict[str, int]) -> None:
+        if side_result is None:
+            return
 
-    @staticmethod
-    def _has_sensor_read_error(result: CycleResult) -> bool:
-        read_error_statuses = {"ERROR SCANNER", "ERROR LONGITUD"}
-        for side_result in (result.right, result.left):
-            if side_result is not None and side_result.status.value in read_error_statuses:
-                return True
-        return False
+        status = side_result.status.value
+        counters["total"] += 1
+
+        if status in {"NUEVO", "OK"}:
+            counters["good"] += 1
+        elif status == "DUPLICADO":
+            counters["duplicate"] += 1
+        elif status in {"ERROR SCANNER", "ERROR LONGITUD"}:
+            counters["read_error"] += 1
 
     def _refresh_counter_labels(self) -> None:
-        self.total_counter.set_value(self.total_count)
-        self.good_counter.set_value(self.good_count)
-        self.duplicate_counter.set_value(self.duplicate_count)
-        self.read_error_counter.set_value(self.read_error_count)
+        self.left_counter_strip.set_values(
+            self.left_counts["total"],
+            self.left_counts["good"],
+            self.left_counts["duplicate"],
+            self.left_counts["read_error"],
+        )
+        self.right_counter_strip.set_values(
+            self.right_counts["total"],
+            self.right_counts["good"],
+            self.right_counts["duplicate"],
+            self.right_counts["read_error"],
+        )
 
     def _normalize_device_name(self, device: str) -> str | None:
         device_lower = device.lower()

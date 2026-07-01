@@ -70,6 +70,8 @@ QWidget {{
 }}
 QLabel {{
     color: {TEXT};
+    border: none;
+    background: transparent;
 }}
 QPushButton {{
     background-color: rgba(255, 255, 255, 0.08);
@@ -138,13 +140,13 @@ def app_background_style(status: str) -> str:
 
 
 def result_panel_style(status: str) -> str:
-    color = color_for_status(status)
-    return f"""
-    QFrame {{
-        background-color: rgba(15, 23, 42, 0.74);
-        border: 2px solid {color};
+    # Panel superior sin borde: solo informa el resultado y los contadores.
+    return """
+    QFrame {
+        background-color: rgba(15, 23, 42, 0.58);
+        border: none;
         border-radius: 24px;
-    }}
+    }
     """
 
 
@@ -182,6 +184,8 @@ def result_text_style(status: str) -> str:
         font-size: 24px;
         font-weight: 950;
         letter-spacing: 0.8px;
+        border: none;
+        background: transparent;
     }}
     """
 
@@ -194,6 +198,30 @@ def counter_card_style(kind: str) -> str:
         border: 1px solid rgba(255, 255, 255, 0.13);
         border-bottom: 5px solid {color};
         border-radius: 18px;
+    }}
+    """
+
+
+
+
+def sensor_counter_strip_style() -> str:
+    return """
+    QFrame {
+        background-color: rgba(255, 255, 255, 0.055);
+        border: none;
+        border-radius: 18px;
+    }
+    """
+
+
+def stat_chip_style(kind: str) -> str:
+    color = COLOR.get(kind, COLOR["neutral"])
+    return f"""
+    QFrame {{
+        background-color: rgba(2, 6, 23, 0.42);
+        border: none;
+        border-bottom: 4px solid {color};
+        border-radius: 14px;
     }}
     """
 
