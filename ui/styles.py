@@ -1,71 +1,31 @@
 from __future__ import annotations
 
-
-APP_STYLESHEET = """
-QMainWindow {
-    background-color: rgb(12, 18, 30);
-}
-QWidget {
-    color: rgb(238, 242, 248);
-    font-family: Segoe UI, Arial, sans-serif;
-}
-QLabel {
-    color: rgb(238, 242, 248);
-}
-QPushButton {
-    background-color: rgba(255, 255, 255, 0.09);
-    color: rgb(245, 247, 250);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 600;
-}
-QPushButton:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-QPushButton:pressed {
-    background-color: rgba(255, 255, 255, 0.06);
-}
-QPushButton#primaryButton {
-    background-color: rgb(46, 196, 182);
-    color: rgb(6, 20, 34);
-    border: none;
-}
-QPushButton#dangerButton {
-    background-color: rgba(255, 82, 82, 0.20);
-    border: 1px solid rgba(255, 82, 82, 0.45);
-}
-QPlainTextEdit {
-    background-color: rgba(0, 0, 0, 0.22);
-    color: rgb(219, 226, 237);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 8px;
-    font-family: Consolas, monospace;
-    font-size: 11px;
-}
-"""
-
+# Paleta V5: oscuro industrial, alto contraste y acentos sobrios.
+# Mantiene colores de producción claros sin saturar toda la pantalla.
 COLOR = {
-    "neutral": "rgb(126, 137, 153)",
-    "info": "rgb(43, 120, 220)",
-    "ok": "rgb(46, 196, 116)",
-    "warning": "rgb(244, 171, 0)",
-    "error": "rgb(226, 70, 70)",
-    "critical": "rgb(122, 24, 36)",
-    "cooldown": "rgb(62, 142, 230)",
+    "neutral": "rgb(113, 124, 139)",      # gris técnico
+    "info": "rgb(54, 132, 245)",         # azul proceso/listo
+    "ok": "rgb(34, 197, 94)",            # verde OK
+    "warning": "rgb(245, 158, 11)",      # ámbar duplicado/warning
+    "error": "rgb(239, 68, 68)",         # rojo error de lectura/código
+    "critical": "rgb(185, 28, 28)",      # rojo oscuro desconexión
+    "cooldown": "rgb(20, 184, 166)",     # teal limpieza/cooldown
 }
 
 BACKGROUND = {
-    "neutral": (12, 18, 30),
+    "neutral": (13, 18, 28),
     "info": (10, 30, 58),
-    "ok": (8, 48, 38),
-    "warning": (70, 47, 8),
-    "error": (68, 16, 24),
-    "critical": (42, 9, 16),
-    "cooldown": (8, 34, 68),
+    "ok": (7, 45, 32),
+    "warning": (61, 41, 9),
+    "error": (67, 20, 25),
+    "critical": (42, 8, 13),
+    "cooldown": (8, 45, 53),
 }
+
+SURFACE = "rgba(15, 23, 42, 0.78)"
+SURFACE_SOFT = "rgba(255, 255, 255, 0.075)"
+TEXT = "rgb(241, 245, 249)"
+TEXT_MUTED = "rgba(226, 232, 240, 0.72)"
 
 STATUS_KIND = {
     "DETENIDO": "neutral",
@@ -100,6 +60,59 @@ STATUS_KIND = {
     "SIN SCANNER IZQUIERDO": "critical",
 }
 
+APP_STYLESHEET = f"""
+QMainWindow {{
+    background-color: rgb(13, 18, 28);
+}}
+QWidget {{
+    color: {TEXT};
+    font-family: Segoe UI, Arial, sans-serif;
+}}
+QLabel {{
+    color: {TEXT};
+}}
+QPushButton {{
+    background-color: rgba(255, 255, 255, 0.08);
+    color: {TEXT};
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 11px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+}}
+QPushButton:hover {{
+    background-color: rgba(255, 255, 255, 0.14);
+}}
+QPushButton:pressed {{
+    background-color: rgba(255, 255, 255, 0.06);
+}}
+QPushButton#primaryButton {{
+    background-color: rgb(54, 132, 245);
+    color: white;
+    border: none;
+}}
+QPushButton#dangerButton {{
+    background-color: rgba(239, 68, 68, 0.20);
+    border: 1px solid rgba(239, 68, 68, 0.52);
+}}
+QPlainTextEdit {{
+    background-color: rgba(2, 6, 23, 0.52);
+    color: rgba(226, 232, 240, 0.84);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 12px;
+    padding: 8px;
+    font-family: Consolas, monospace;
+    font-size: 10px;
+}}
+QMessageBox {{
+    background-color: rgb(15, 23, 42);
+}}
+QMessageBox QLabel {{
+    color: {TEXT};
+    font-size: 14px;
+}}
+"""
+
 
 def kind_for_status(status: str) -> str:
     return STATUS_KIND.get(status, "neutral")
@@ -114,19 +127,23 @@ def app_background_style(status: str) -> str:
     r, g, b = BACKGROUND[kind]
     return f"""
     QWidget#appRoot {{
-        background-color: rgb({r}, {g}, {b});
+        background-color: qlineargradient(
+            x1: 0, y1: 0, x2: 1, y2: 1,
+            stop: 0 rgb({r}, {g}, {b}),
+            stop: 0.62 rgb(13, 18, 28),
+            stop: 1 rgb(2, 6, 23)
+        );
     }}
     """
 
 
-def glass_panel_style(status: str = "ESPERANDO") -> str:
+def result_panel_style(status: str) -> str:
     color = color_for_status(status)
     return f"""
     QFrame {{
-        background-color: rgba(255, 255, 255, 0.075);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-left: 6px solid {color};
-        border-radius: 18px;
+        background-color: rgba(15, 23, 42, 0.74);
+        border: 2px solid {color};
+        border-radius: 24px;
     }}
     """
 
@@ -135,9 +152,9 @@ def card_style(status: str) -> str:
     color = color_for_status(status)
     return f"""
     QFrame {{
-        background-color: rgba(255, 255, 255, 0.095);
+        background-color: rgba(15, 23, 42, 0.78);
         border: 3px solid {color};
-        border-radius: 22px;
+        border-radius: 28px;
     }}
     """
 
@@ -147,44 +164,43 @@ def indicator_style(status: str) -> str:
     return f"""
     QLabel {{
         background-color: {color};
-        border: 5px solid rgba(255, 255, 255, 0.42);
-        border-radius: 44px;
-        min-width: 88px;
-        max-width: 88px;
-        min-height: 88px;
-        max-height: 88px;
+        border: 8px solid rgba(255, 255, 255, 0.34);
+        border-radius: 62px;
+        min-width: 124px;
+        max-width: 124px;
+        min-height: 124px;
+        max-height: 124px;
     }}
     """
 
 
-def badge_style(status: str) -> str:
+def result_text_style(status: str) -> str:
     color = color_for_status(status)
     return f"""
     QLabel {{
-        background-color: {color};
-        color: white;
-        border-radius: 16px;
-        padding: 10px 18px;
-        font-size: 18px;
-        font-weight: 800;
+        color: {color};
+        font-size: 24px;
+        font-weight: 950;
+        letter-spacing: 0.8px;
     }}
     """
 
 
-def result_panel_style(status: str) -> str:
-    color = color_for_status(status)
+def counter_card_style(kind: str) -> str:
+    color = COLOR.get(kind, COLOR["neutral"])
     return f"""
     QFrame {{
-        background-color: rgba(255, 255, 255, 0.105);
-        border: 2px solid {color};
-        border-radius: 22px;
+        background-color: rgba(255, 255, 255, 0.078);
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        border-bottom: 5px solid {color};
+        border-radius: 18px;
     }}
     """
 
 
 def connection_pill_style(connected: bool) -> str:
     color = COLOR["ok"] if connected else COLOR["critical"]
-    background = "rgba(46, 196, 116, 0.16)" if connected else "rgba(226, 70, 70, 0.20)"
+    background = "rgba(34, 197, 94, 0.14)" if connected else "rgba(185, 28, 28, 0.18)"
     return f"""
     QFrame {{
         background-color: {background};
@@ -204,28 +220,5 @@ def small_dot_style(connected: bool) -> str:
         max-width: 14px;
         min-height: 14px;
         max-height: 14px;
-    }}
-    """
-
-
-def counter_card_style(kind: str) -> str:
-    color = COLOR.get(kind, COLOR["neutral"])
-    return f"""
-    QFrame {{
-        background-color: rgba(255, 255, 255, 0.085);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-bottom: 5px solid {color};
-        border-radius: 16px;
-    }}
-    """
-
-
-def alert_banner_style(level: str = "error") -> str:
-    color = COLOR["critical"] if level == "critical" else COLOR.get(level, COLOR["error"])
-    return f"""
-    QFrame {{
-        background-color: rgba(0, 0, 0, 0.30);
-        border: 2px solid {color};
-        border-radius: 16px;
     }}
     """

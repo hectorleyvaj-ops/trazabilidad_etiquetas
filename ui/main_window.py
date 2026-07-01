@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
@@ -16,21 +17,22 @@ from PySide6.QtWidgets import (
 )
 
 from core.models import CycleResult, GeneralResult, NestSide
-from ui.styles import APP_STYLESHEET, app_background_style, badge_style, result_panel_style
-from ui.widgets import AlertBanner, ConnectionPill, CounterCard, SensorCard
+from ui.styles import APP_STYLESHEET, app_background_style, result_panel_style
+from ui.widgets import ConnectionPill, CounterCard, SensorCard
 from workers.traceability_worker import TraceabilityWorker
 
 
 class MainWindow(QMainWindow):
-    """Ventana principal enfocada en operación de producción.
+    """Ventana principal V5 para operador.
 
-    La interfaz no lee sockets, no escribe al PLC y no valida etiquetas.
-    Solo muestra estado, contadores, alertas y manda señales de control al worker.
+    Está basada visualmente en la idea del panel oscuro del script Tkinter
+    compartido por el usuario, pero mantiene la arquitectura PySide6 modular:
+    la interfaz solo visualiza señales; no lee sockets, no escribe Excel y no
+    manda comandos al PLC.
     """
 
     start_requested = Signal()
     stop_requested = Signal()
-    reconnect_requested = Signal()
     simulate_once_requested = Signal()
 
     def __init__(self, config: dict, base_dir: Path, parent: QWidget | None = None) -> None:
@@ -39,139 +41,129 @@ class MainWindow(QMainWindow):
         self.base_dir = base_dir
 
         self.good_count = 0
-        self.error_count = 0
         self.duplicate_count = 0
+        self.read_error_count = 0
         self.total_count = 0
         self.connection_states = {
             "PLC": False,
             "Scanner derecho": False,
             "Scanner izquierdo": False,
         }
+        self.connection_alerts: dict[str, QMessageBox] = {}
+        self.notified_disconnected_devices: set[str] = set()
 
         self.setWindowTitle(config["app"].get("title", "Sistema de trazabilidad"))
-        self.resize(1180, 760)
-        self.setMinimumSize(980, 640)
+        self.resize(1180, 720)
+        self.setMinimumSize(980, 620)
         self.setStyleSheet(APP_STYLESHEET)
 
         self._build_ui()
         self._setup_worker()
         self._apply_system_theme("DETENIDO")
 
-        if config.get("app", {}).get("auto_start", False):
-            QTimer.singleShot(300, self.start_requested.emit)
+        # Producción: al abrir, el sistema inicia conexiones automáticamente.
+        QTimer.singleShot(400, self.start_requested.emit)
 
     def _build_ui(self) -> None:
         self.root_widget = QWidget()
         self.root_widget.setObjectName("appRoot")
         root = QVBoxLayout(self.root_widget)
-        root.setContentsMargins(20, 18, 20, 18)
+        root.setContentsMargins(20, 16, 20, 16)
         root.setSpacing(12)
 
-        title = QLabel("SISTEMA DE TRAZABILIDAD")
-        title.setStyleSheet("font-size: 30px; font-weight: 900; letter-spacing: 1px;")
-
-        self.system_status_label = QLabel("DETENIDO")
-        self.system_status_label.setStyleSheet(badge_style("DETENIDO"))
-
-        header_row = QHBoxLayout()
-        header_row.addWidget(title)
-        header_row.addStretch()
-        header_row.addWidget(self.system_status_label)
-
-        self.plc_pill = ConnectionPill("PLC")
-        self.right_pill = ConnectionPill("Scanner derecho")
-        self.left_pill = ConnectionPill("Scanner izquierdo")
-
-        connections_row = QHBoxLayout()
-        connections_row.setSpacing(10)
-        connections_row.addWidget(self.plc_pill)
-        connections_row.addWidget(self.right_pill)
-        connections_row.addWidget(self.left_pill)
-        connections_row.addStretch()
-
-        self.alert_banner = AlertBanner()
-
+        # Panel superior: SOLO resultado de ciclo + contadores.
         self.result_panel = QFrame()
         self.result_panel.setStyleSheet(result_panel_style("ESPERANDO"))
         result_layout = QHBoxLayout(self.result_panel)
-        result_layout.setContentsMargins(20, 16, 20, 16)
+        result_layout.setContentsMargins(24, 18, 24, 18)
         result_layout.setSpacing(18)
 
-        result_caption = QLabel("Resultado del ciclo")
-        result_caption.setStyleSheet("font-size: 15px; color: rgba(238, 242, 248, 0.72); font-weight: 700;")
+        result_caption = QLabel("RESULTADO DEL CICLO")
+        result_caption.setStyleSheet("font-size: 14px; color: rgba(226, 232, 240, 0.70); font-weight: 900;")
         self.cycle_result_label = QLabel("ESPERANDO")
-        self.cycle_result_label.setStyleSheet("font-size: 42px; font-weight: 950;")
-        self.cycle_result_label.setMinimumHeight(54)
+        self.cycle_result_label.setStyleSheet("font-size: 50px; font-weight: 950; letter-spacing: 1px;")
+        self.cycle_result_label.setMinimumHeight(64)
 
         result_text_col = QVBoxLayout()
+        result_text_col.setSpacing(0)
         result_text_col.addWidget(result_caption)
         result_text_col.addWidget(self.cycle_result_label)
 
-        self.total_counter = CounterCard("TOTAL", "info")
+        self.total_counter = CounterCard("TOTAL EVALUADAS", "info")
         self.good_counter = CounterCard("BUENAS", "ok")
-        self.error_counter = CounterCard("ERRORES", "error")
         self.duplicate_counter = CounterCard("DUPLICADAS", "warning")
+        self.read_error_counter = CounterCard("ERRORES DE LECTURA", "error")
 
         counters_row = QHBoxLayout()
         counters_row.setSpacing(10)
         counters_row.addWidget(self.total_counter)
         counters_row.addWidget(self.good_counter)
-        counters_row.addWidget(self.error_counter)
         counters_row.addWidget(self.duplicate_counter)
+        counters_row.addWidget(self.read_error_counter)
 
         result_layout.addLayout(result_text_col, stretch=3)
-        result_layout.addLayout(counters_row, stretch=4)
+        result_layout.addLayout(counters_row, stretch=5)
 
-        self.right_card = SensorCard("NIDO DERECHO")
+        # Panel central: dos nidos, indicadores grandes y texto mínimo.
         self.left_card = SensorCard("NIDO IZQUIERDO")
+        self.right_card = SensorCard("NIDO DERECHO")
 
         cards_row = QHBoxLayout()
-        cards_row.setSpacing(16)
-        cards_row.addWidget(self.right_card)
+        cards_row.setSpacing(18)
         cards_row.addWidget(self.left_card)
+        cards_row.addWidget(self.right_card)
 
-        log_title = QLabel("Eventos recientes")
-        log_title.setStyleSheet("font-size: 13px; font-weight: 800; color: rgba(238, 242, 248, 0.68);")
+        # Fila inferior: conexiones discretas + controles mínimos.
+        self.plc_pill = ConnectionPill("PLC")
+        self.left_pill = ConnectionPill("Izquierdo")
+        self.right_pill = ConnectionPill("Derecho")
+
+        connections_row = QHBoxLayout()
+        connections_row.setSpacing(8)
+        connections_row.addWidget(self.plc_pill)
+        connections_row.addWidget(self.left_pill)
+        connections_row.addWidget(self.right_pill)
+
+        self.stop_button = QPushButton("Detener")
+        self.stop_button.setObjectName("dangerButton")
+        self.start_button = QPushButton("Reanudar")
+        self.start_button.setObjectName("primaryButton")
+        self.reset_counters_button = QPushButton("Reiniciar contadores")
+        self.clear_log_button = QPushButton("Limpiar log")
+        self.simulate_button = QPushButton("Simular")
+
+        if not self.config.get("app", {}).get("simulation_enabled", False):
+            self.simulate_button.hide()
+
+        buttons_row = QHBoxLayout()
+        buttons_row.setSpacing(8)
+        buttons_row.addWidget(self.stop_button)
+        buttons_row.addWidget(self.start_button)
+        buttons_row.addWidget(self.reset_counters_button)
+        buttons_row.addWidget(self.clear_log_button)
+        buttons_row.addWidget(self.simulate_button)
+
+        footer_row = QHBoxLayout()
+        footer_row.setSpacing(12)
+        footer_row.addLayout(connections_row, stretch=4)
+        footer_row.addStretch(1)
+        footer_row.addLayout(buttons_row, stretch=4)
 
         self.log_view = QPlainTextEdit()
         self.log_view.setReadOnly(True)
-        self.log_view.setMaximumBlockCount(180)
-        self.log_view.setFixedHeight(128)
-        self.log_view.setPlaceholderText("Eventos recientes del sistema...")
+        self.log_view.setMaximumBlockCount(100)
+        self.log_view.setFixedHeight(58)
+        self.log_view.setPlaceholderText("Eventos recientes...")
 
-        self.start_button = QPushButton("Iniciar")
-        self.start_button.setObjectName("primaryButton")
-        self.stop_button = QPushButton("Detener")
-        self.stop_button.setObjectName("dangerButton")
-        self.reconnect_button = QPushButton("Reconectar")
-        self.clear_log_button = QPushButton("Limpiar log")
-        self.reset_counters_button = QPushButton("Reiniciar contadores")
-        self.simulate_button = QPushButton("Simular ciclo")
-
-        buttons_row = QHBoxLayout()
-        buttons_row.setSpacing(10)
-        buttons_row.addWidget(self.start_button)
-        buttons_row.addWidget(self.stop_button)
-        buttons_row.addWidget(self.reconnect_button)
-        buttons_row.addWidget(self.reset_counters_button)
-        buttons_row.addWidget(self.clear_log_button)
-        buttons_row.addStretch()
-        buttons_row.addWidget(self.simulate_button)
-
-        root.addLayout(header_row)
-        root.addLayout(connections_row)
-        root.addWidget(self.alert_banner)
         root.addWidget(self.result_panel)
         root.addLayout(cards_row, stretch=1)
-        root.addWidget(log_title)
+        root.addLayout(footer_row)
         root.addWidget(self.log_view)
-        root.addLayout(buttons_row)
 
         self.setCentralWidget(self.root_widget)
 
         self.start_button.clicked.connect(self.start_requested.emit)
         self.stop_button.clicked.connect(self.stop_requested.emit)
-        self.reconnect_button.clicked.connect(self.reconnect_requested.emit)
         self.simulate_button.clicked.connect(self.simulate_once_requested.emit)
         self.clear_log_button.clicked.connect(self.log_view.clear)
         self.reset_counters_button.clicked.connect(self.reset_counters)
@@ -183,7 +175,6 @@ class MainWindow(QMainWindow):
 
         self.start_requested.connect(self.worker.start)
         self.stop_requested.connect(self.worker.stop)
-        self.reconnect_requested.connect(self.worker.reconnect_devices)
         self.simulate_once_requested.connect(self.worker.simulate_once)
 
         self.worker.scanner_status_changed.connect(self.on_scanner_status_changed)
@@ -197,34 +188,39 @@ class MainWindow(QMainWindow):
 
     @Slot(str, str)
     def on_scanner_status_changed(self, side: str, status: str) -> None:
-        if side == "right":
+        if side == NestSide.RIGHT.value:
             self.right_card.set_status(status)
-        elif side == "left":
+        elif side == NestSide.LEFT.value:
             self.left_card.set_status(status)
 
     @Slot(str, str, int, str)
     def on_code_received(self, side: str, code: str, length: int, timestamp: str) -> None:
-        if side == "right":
+        if side == NestSide.RIGHT.value:
             self.right_card.set_code(code, length, timestamp)
-        elif side == "left":
+        elif side == NestSide.LEFT.value:
             self.left_card.set_code(code, length, timestamp)
 
     @Slot(object)
     def on_cycle_result(self, result: CycleResult) -> None:
         status = result.general_result.value
-        self.cycle_result_label.setText(status)
+        self.cycle_result_label.setText(self._friendly_general_result(result.general_result))
         self.result_panel.setStyleSheet(result_panel_style(status))
         self._apply_system_theme(status)
-        self._update_counters(result.general_result)
+        self._update_counters(result)
 
     @Slot(str)
     def on_system_status_changed(self, status: str) -> None:
-        self.system_status_label.setText(status)
-        self.system_status_label.setStyleSheet(badge_style(status))
+        # La pantalla superior queda enfocada al resultado del ciclo, no al estado técnico.
         self._apply_system_theme(status)
         if status == "DETENIDO":
+            self.cycle_result_label.setText("DETENIDO")
+            self.result_panel.setStyleSheet(result_panel_style(status))
             self._set_all_connections(False)
-            self.alert_banner.clear_alert()
+            self.right_card.reset()
+            self.left_card.reset()
+        elif status in {"ESPERANDO LECTURAS", "INICIANDO", "LISTO"} and self.cycle_result_label.text() in {"DETENIDO", "INICIANDO"}:
+            self.cycle_result_label.setText("ESPERANDO")
+            self.result_panel.setStyleSheet(result_panel_style("ESPERANDO"))
 
     @Slot(str, str)
     def on_log_message(self, level: str, message: str) -> None:
@@ -242,35 +238,50 @@ class MainWindow(QMainWindow):
         self._append_log(level, f"{device}: {state} ({message})")
 
         if not connected:
-            self.alert_banner.show_alert(f"{device} sin conexión. Revisa cableado, red, alimentación o puerto configurado.")
             self._apply_system_theme("SIN CONEXIÓN")
+            self._show_connection_popup(normalized or device, message)
         else:
-            self._refresh_alert_banner()
+            self._close_connection_popup(normalized or device)
 
     @Slot()
     def reset_counters(self) -> None:
         self.good_count = 0
-        self.error_count = 0
         self.duplicate_count = 0
+        self.read_error_count = 0
         self.total_count = 0
         self._refresh_counter_labels()
         self._append_log("INFO", "Contadores reiniciados desde interfaz.")
 
-    def _update_counters(self, general_result: GeneralResult) -> None:
+    def _update_counters(self, result: CycleResult) -> None:
         self.total_count += 1
-        if general_result == GeneralResult.OK:
+        if result.general_result == GeneralResult.OK:
             self.good_count += 1
-        elif general_result == GeneralResult.DUPLICATE:
+        if result.general_result == GeneralResult.DUPLICATE or self._has_duplicate(result):
             self.duplicate_count += 1
-        else:
-            self.error_count += 1
+        if result.general_result in {GeneralResult.READ_ERROR, GeneralResult.LENGTH_ERROR} or self._has_sensor_read_error(result):
+            self.read_error_count += 1
         self._refresh_counter_labels()
+
+    @staticmethod
+    def _has_duplicate(result: CycleResult) -> bool:
+        for side_result in (result.right, result.left):
+            if side_result is not None and side_result.status.value == "DUPLICADO":
+                return True
+        return False
+
+    @staticmethod
+    def _has_sensor_read_error(result: CycleResult) -> bool:
+        read_error_statuses = {"ERROR SCANNER", "ERROR LONGITUD"}
+        for side_result in (result.right, result.left):
+            if side_result is not None and side_result.status.value in read_error_statuses:
+                return True
+        return False
 
     def _refresh_counter_labels(self) -> None:
         self.total_counter.set_value(self.total_count)
         self.good_counter.set_value(self.good_count)
-        self.error_counter.set_value(self.error_count)
         self.duplicate_counter.set_value(self.duplicate_count)
+        self.read_error_counter.set_value(self.read_error_count)
 
     def _normalize_device_name(self, device: str) -> str | None:
         device_lower = device.lower()
@@ -295,12 +306,43 @@ class MainWindow(QMainWindow):
             self.connection_states[device] = connected
             self._update_connection_pill(device, connected, "Sistema detenido" if not connected else "")
 
-    def _refresh_alert_banner(self) -> None:
-        disconnected = [name for name, ok in self.connection_states.items() if not ok]
-        if disconnected:
-            self.alert_banner.show_alert("Dispositivo sin conexión: " + ", ".join(disconnected))
-        else:
-            self.alert_banner.clear_alert()
+    def _show_connection_popup(self, device: str, message: str) -> None:
+        if device in self.notified_disconnected_devices:
+            return
+        self.notified_disconnected_devices.add(device)
+        detail = message or "No se pudo establecer comunicación."
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Critical)
+        box.setWindowTitle("Error de conexión")
+        box.setText(f"{device} sin conexión")
+        box.setInformativeText(
+            "Revisa alimentación, cableado, red, puerto configurado y que el dispositivo esté encendido.\n\n"
+            f"Detalle: {detail}"
+        )
+        box.setStandardButtons(QMessageBox.Ok)
+        box.setModal(False)
+        box.finished.connect(lambda _result, name=device: self.connection_alerts.pop(name, None))
+        self.connection_alerts[device] = box
+        box.show()
+
+    def _close_connection_popup(self, device: str) -> None:
+        self.notified_disconnected_devices.discard(device)
+        box = self.connection_alerts.pop(device, None)
+        if box is not None:
+            box.close()
+
+    @staticmethod
+    def _friendly_general_result(result: GeneralResult) -> str:
+        labels = {
+            GeneralResult.WAITING: "ESPERANDO",
+            GeneralResult.OK: "OK",
+            GeneralResult.ERROR: "ERROR",
+            GeneralResult.DUPLICATE: "DUPLICADO",
+            GeneralResult.READ_ERROR: "ERROR LECTURA",
+            GeneralResult.LENGTH_ERROR: "ERROR CÓDIGO",
+            GeneralResult.CONNECTION_ERROR: "SIN CONEXIÓN",
+        }
+        return labels.get(result, result.value)
 
     def _apply_system_theme(self, status: str) -> None:
         self.root_widget.setStyleSheet(app_background_style(status))
@@ -311,6 +353,10 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:  # noqa: N802 - Qt usa camelCase
         self.stop_requested.emit()
+        for box in list(self.connection_alerts.values()):
+            box.close()
+        self.connection_alerts.clear()
+        self.notified_disconnected_devices.clear()
         self.worker_thread.quit()
         self.worker_thread.wait(1500)
         super().closeEvent(event)
