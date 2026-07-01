@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
 
     def _setup_worker(self) -> None:
         self.worker_thread = QThread(self)
-        self.worker = TraceabilityWorker(config=self.config)
+        self.worker = TraceabilityWorker(config=self.config, base_dir=self.base_dir)
         self.worker.moveToThread(self.worker_thread)
 
         self.start_requested.connect(self.worker.start)
