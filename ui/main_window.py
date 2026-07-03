@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThread, QTimer, Signal, Slot
+from PySide6.QtCore import QMetaObject, Qt, QThread, QTimer, Signal, Slot
 from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import (
     QFrame,
@@ -220,6 +220,11 @@ class MainWindow(QMainWindow):
             self.result_panel.setStyleSheet(result_panel_style("SIN CONEXIÓN"))
             return
 
+        if status == "RECONECTANDO":
+            self.cycle_result_label.setText("RECONECTANDO")
+            self.result_panel.setStyleSheet(result_panel_style("RECONECTANDO"))
+            return
+
         if status == "ESPERANDO SEGUNDA LECTURA":
             self.cycle_result_label.setText("LEYENDO")
             self.result_panel.setStyleSheet(result_panel_style(status))
@@ -366,11 +371,24 @@ class MainWindow(QMainWindow):
         self.log_view.moveCursor(QTextCursor.End)
 
     def closeEvent(self, event) -> None:  # noqa: N802 - Qt usa camelCase
-        self.stop_requested.emit()
+        """Cierre seguro para evitar que python.exe quede vivo en segundo plano."""
         for box in list(self.connection_alerts.values()):
             box.close()
         self.connection_alerts.clear()
         self.notified_disconnected_devices.clear()
+
+        try:
+            if self.worker_thread.isRunning():
+                # Ejecuta stop() dentro del hilo del worker y espera a que cierre
+                # sockets/puerto serial antes de terminar el thread.
+                QMetaObject.invokeMethod(self.worker, "stop", Qt.BlockingQueuedConnection)
+        except RuntimeError:
+            # Si Qt ya está destruyendo objetos, no bloqueamos el cierre.
+            pass
+
         self.worker_thread.quit()
-        self.worker_thread.wait(1500)
+        if not self.worker_thread.wait(4000):
+            self.worker_thread.terminate()
+            self.worker_thread.wait(1000)
+        event.accept()
         super().closeEvent(event)

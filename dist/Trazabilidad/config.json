@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Sistema de trazabilidad con doble scanner y PLC",
-    "auto_start": false,
+    "auto_start": true,
     "simulation_enabled": false
   },
   "scanners": {
@@ -9,15 +9,31 @@
       "name": "Nido derecho",
       "ip": "192.168.0.10",
       "port": 5000,
-      "timeout_seconds": 1.0,
-      "reconnect_interval_seconds": 2.0
+      "timeout_seconds": 0.4,
+      "reconnect_interval_seconds": 0.5,
+      "tcp_keepalive_enabled": true,
+      "tcp_keepalive_idle_ms": 1000,
+      "tcp_keepalive_interval_ms": 500,
+      "tcp_keepalive_count": 2,
+      "active_probe_enabled": false,
+      "active_probe_interval_seconds": 1.0,
+      "active_probe_timeout_seconds": 0.25,
+      "active_probe_failures_before_disconnect": 2
     },
     "left": {
       "name": "Nido izquierdo",
       "ip": "192.168.0.11",
       "port": 5000,
-      "timeout_seconds": 1.0,
-      "reconnect_interval_seconds": 2.0
+      "timeout_seconds": 0.4,
+      "reconnect_interval_seconds": 0.5,
+      "tcp_keepalive_enabled": true,
+      "tcp_keepalive_idle_ms": 1000,
+      "tcp_keepalive_interval_ms": 500,
+      "tcp_keepalive_count": 2,
+      "active_probe_enabled": false,
+      "active_probe_interval_seconds": 1.0,
+      "active_probe_timeout_seconds": 0.25,
+      "active_probe_failures_before_disconnect": 2
     }
   },
   "plc": {
@@ -32,7 +48,9 @@
       "ok": "0100",
       "error": "0200"
     },
-    "reset_delay_ms": 500
+    "reset_delay_ms": 500,
+    "write_timeout": 1.0,
+    "require_port_presence": true
   },
   "validation": {
     "expected_length": 22,
@@ -67,5 +85,13 @@
     "file_path": "logs/trazabilidad.log",
     "max_bytes": 1048576,
     "backup_count": 5
+  },
+  "connection_monitor": {
+    "health_check_interval_seconds": 0.3,
+    "scanner_health_check_interval_seconds": 0.3,
+    "reconnect_interval_seconds": 2.0,
+    "fast_reconnect_window_seconds": 12.0,
+    "fast_reconnect_interval_seconds": 0.5,
+    "slow_reconnect_interval_seconds": 2.0
   }
 }

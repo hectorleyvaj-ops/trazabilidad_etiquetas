@@ -34,6 +34,7 @@ STATUS_KIND = {
     "ESPERANDO LECTURAS": "neutral",
     "LISTO": "neutral",
     "INICIANDO": "info",
+    "RECONECTANDO": "warning",
     "ESPERANDO SEGUNDA LECTURA": "info",
     "LECTURA RECIBIDA": "info",
     "VALIDANDO": "info",

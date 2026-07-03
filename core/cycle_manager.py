@@ -51,19 +51,15 @@ class CycleManager:
         self.logger = logging.getLogger(__name__)
 
         scanner_cfg = config["scanners"]
-        self.right_scanner = ScannerTCP(
+        self.right_scanner = self._build_scanner(
             side=NestSide.RIGHT,
             name="Scanner derecho",
-            ip=scanner_cfg["right"]["ip"],
-            port=scanner_cfg["right"]["port"],
-            timeout_seconds=scanner_cfg["right"].get("timeout_seconds", 0.2),
+            cfg=scanner_cfg["right"],
         )
-        self.left_scanner = ScannerTCP(
+        self.left_scanner = self._build_scanner(
             side=NestSide.LEFT,
             name="Scanner izquierdo",
-            ip=scanner_cfg["left"]["ip"],
-            port=scanner_cfg["left"]["port"],
-            timeout_seconds=scanner_cfg["left"].get("timeout_seconds", 0.2),
+            cfg=scanner_cfg["left"],
         )
         self.plc = PlcFxSerial(config["plc"])
 
@@ -80,6 +76,8 @@ class CycleManager:
         self.cycle_started_at: float | None = None
         self.cooldown_until: float | None = None
         self._last_reconnect_attempt_at = 0.0
+        self._last_health_check_at = 0.0
+        self._connection_lost_since: float | None = None
 
     def close(self) -> None:
         self.right_scanner.close()
@@ -92,12 +90,34 @@ class CycleManager:
         self.ensure_connections(force=True)
 
     def ensure_connections(self, force: bool = False) -> bool:
-        """Conecta dispositivos sin disparar ciclos de evaluación."""
+        """Conecta y monitorea dispositivos sin disparar ciclos de evaluación.
+
+        V9.1 agrega reconexión rápida por fases:
+        - Si todos están conectados, solo se hacen health checks ligeros.
+        - Si algo cae, se cierra el socket/COM dañado, se cancela el ciclo activo
+          y se intenta reconectar rápido durante una ventana corta.
+        - Después de esa ventana se reduce la frecuencia para no saturar al scanner.
+        """
+        self._check_existing_connections(force=force)
+
+        if self._all_devices_connected():
+            if self._connection_lost_since is not None:
+                self.emit_log("INFO", "Todos los dispositivos fueron reconectados correctamente.")
+            self._connection_lost_since = None
+            if not self.is_cycle_active and not self.is_in_cooldown:
+                self.emit_status("ESPERANDO LECTURAS")
+            return True
+
         now = time.monotonic()
-        reconnect_interval = float(self.config["scanners"]["right"].get("reconnect_interval_seconds", 2.0))
+        if self._connection_lost_since is None:
+            self._connection_lost_since = now
+
+        reconnect_interval = self._current_reconnect_interval(now)
         if not force and now - self._last_reconnect_attempt_at < reconnect_interval:
-            return self.plc.is_connected and self.right_scanner.is_connected and self.left_scanner.is_connected
+            return False
+
         self._last_reconnect_attempt_at = now
+        self.emit_status("RECONECTANDO")
 
         ok = True
         if not self.plc.is_connected:
@@ -105,13 +125,17 @@ class CycleManager:
             connected = self.plc.connect()
             self.emit_connection("PLC", connected, f"{self.config['plc']['port']} @ {self.config['plc']['baudrate']}")
             if connected:
-                self.plc.send_k0()
+                reset_ok = self.plc.send_k0()
+                self.emit_log("INFO" if reset_ok else "ERROR", "PLC inicializado con K0." if reset_ok else "PLC conectó, pero falló reset K0.")
             ok &= connected
 
         ok &= self._ensure_scanner(self.right_scanner, "SIN SCANNER DERECHO")
         ok &= self._ensure_scanner(self.left_scanner, "SIN SCANNER IZQUIERDO")
-        if ok and not self.is_cycle_active and not self.is_in_cooldown:
-            self.emit_status("ESPERANDO LECTURAS")
+
+        if ok:
+            self._connection_lost_since = None
+            if not self.is_cycle_active and not self.is_in_cooldown:
+                self.emit_status("ESPERANDO LECTURAS")
         return ok
 
     @property
@@ -283,6 +307,11 @@ class CycleManager:
             plc_value = self.config["plc"]["d0_values"]["error"]
 
         sent = False
+        if not self.plc.check_connection(force=True):
+            self.emit_connection("PLC", False, "PLC no disponible antes de enviar resultado")
+            self.emit_status("SIN PLC")
+            general = GeneralResult.CONNECTION_ERROR
+
         if general == GeneralResult.OK:
             self.emit_status("ENVIANDO OK AL PLC")
             sent = self.plc.send_k1()
@@ -301,6 +330,8 @@ class CycleManager:
 
         self.emit_status("RESET PLC")
         reset_ok = self.plc.send_k0()
+        if not reset_ok:
+            self.emit_connection("PLC", False, "Fallo al enviar K0 reset")
         self.emit_log("INFO" if reset_ok else "ERROR", f"PLC <- K0 RESET ({self.config['plc']['d0_values']['reset']})")
 
         cycle = CycleResult(right_result, left_result, general, plc_value, now)
@@ -331,6 +362,17 @@ class CycleManager:
         timeout = float(self.config["cycle"].get("pair_timeout_ms", self.config["cycle"].get("read_timeout_ms", 3000))) / 1000.0
         return (time.monotonic() - self.cycle_started_at) >= timeout
 
+    def _current_reconnect_interval(self, now: float) -> float:
+        monitor_cfg = self.config.get("connection_monitor", {})
+        fast_window = float(monitor_cfg.get("fast_reconnect_window_seconds", 10.0))
+        fast_interval = float(monitor_cfg.get("fast_reconnect_interval_seconds", 0.5))
+        slow_interval = float(monitor_cfg.get("slow_reconnect_interval_seconds", 2.0))
+
+        if self._connection_lost_since is None:
+            return slow_interval
+        elapsed = now - self._connection_lost_since
+        return fast_interval if elapsed <= fast_window else slow_interval
+
     def _ensure_scanner(self, scanner: ScannerTCP, missing_status: str) -> bool:
         if scanner.is_connected:
             return True
@@ -339,6 +381,60 @@ class CycleManager:
         self.emit_connection(scanner.name, connected, f"{scanner.ip}:{scanner.port}")
         self.emit_scanner_status(scanner.side.value, "ESPERANDO" if connected else "SIN CONEXIÓN")
         return connected
+
+    def _check_existing_connections(self, force: bool = False) -> None:
+        monitor_cfg = self.config.get("connection_monitor", {})
+        interval = float(monitor_cfg.get("health_check_interval_seconds", 1.0))
+        now = time.monotonic()
+        if not force and now - self._last_health_check_at < interval:
+            return
+        self._last_health_check_at = now
+
+        lost_any = False
+
+        if self.plc.is_connected and not self.plc.check_connection(force=force, interval_seconds=interval):
+            lost_any = True
+            self.emit_status("SIN PLC")
+            self.emit_connection("PLC", False, f"{self.config['plc']['port']} desconectado o no disponible")
+
+        scanner_interval = float(monitor_cfg.get("scanner_health_check_interval_seconds", interval))
+        for scanner, status in (
+            (self.right_scanner, "SIN SCANNER DERECHO"),
+            (self.left_scanner, "SIN SCANNER IZQUIERDO"),
+        ):
+            if scanner.is_connected and not scanner.check_connection(force=force, interval_seconds=scanner_interval):
+                lost_any = True
+                self.emit_status(status)
+                self.emit_connection(scanner.name, False, f"{scanner.ip}:{scanner.port} sin respuesta")
+                self.emit_scanner_status(scanner.side.value, "SIN CONEXIÓN")
+
+        if lost_any:
+            # Si se pierde un dispositivo a mitad de una ventana de lectura,
+            # se invalida el ciclo para impedir evaluaciones incompletas o falsos OK.
+            self.reset_cycle_state(clear_device_buffers=True)
+            self.emit_status("ERROR DE CONEXIÓN")
+            self.emit_log("ERROR", "Dispositivo desconectado. Ciclo actual cancelado y sistema en reconexión automática.")
+
+    def _all_devices_connected(self) -> bool:
+        return self.plc.is_connected and self.right_scanner.is_connected and self.left_scanner.is_connected
+
+    @staticmethod
+    def _build_scanner(side: NestSide, name: str, cfg: dict) -> ScannerTCP:
+        return ScannerTCP(
+            side=side,
+            name=name,
+            ip=cfg["ip"],
+            port=cfg["port"],
+            timeout_seconds=cfg.get("timeout_seconds", 0.2),
+            tcp_keepalive_enabled=cfg.get("tcp_keepalive_enabled", True),
+            tcp_keepalive_idle_ms=cfg.get("tcp_keepalive_idle_ms", 3000),
+            tcp_keepalive_interval_ms=cfg.get("tcp_keepalive_interval_ms", 1000),
+            tcp_keepalive_count=cfg.get("tcp_keepalive_count", 3),
+            active_probe_enabled=cfg.get("active_probe_enabled", False),
+            active_probe_interval_seconds=cfg.get("active_probe_interval_seconds", 2.0),
+            active_probe_timeout_seconds=cfg.get("active_probe_timeout_seconds", 0.4),
+            active_probe_failures_before_disconnect=cfg.get("active_probe_failures_before_disconnect", 2),
+        )
 
     @staticmethod
     def _timeout_result(side: NestSide) -> ValidationResult:

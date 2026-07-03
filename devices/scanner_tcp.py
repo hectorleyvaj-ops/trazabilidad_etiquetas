@@ -23,13 +23,11 @@ class ScannerReadResult:
 class ScannerTCP:
     """Cliente TCP para scanner industrial.
 
-    Punto crítico:
-    La separación se hace por CR/LF/CRLF ANTES de limpiar la lectura. Así evitamos
-    empalmar dos códigos como `ABC\rABC\r\n` y convertirlos en una cadena falsa.
-
-    En modo real, el sistema usa read_available() para escuchar constantemente sin
-    bloquear la UI ni forzar ciclos artificiales. Si llegan varias lecturas juntas,
-    solo se conserva la primera lectura útil y se reportan las demás como descartadas.
+    Puntos críticos:
+    - La separación se hace por CR/LF/CRLF ANTES de limpiar la lectura.
+    - Si llegan varias lecturas juntas, solo se conserva la primera lectura útil.
+    - El socket se monitorea con keepalive y chequeos periódicos para detectar
+      desconexiones físicas que TCP normalmente deja "silenciosas".
     """
 
     def __init__(
@@ -39,6 +37,14 @@ class ScannerTCP:
         ip: str,
         port: int,
         timeout_seconds: float = 0.2,
+        tcp_keepalive_enabled: bool = True,
+        tcp_keepalive_idle_ms: int = 3000,
+        tcp_keepalive_interval_ms: int = 1000,
+        tcp_keepalive_count: int = 3,
+        active_probe_enabled: bool = False,
+        active_probe_interval_seconds: float = 2.0,
+        active_probe_timeout_seconds: float = 0.4,
+        active_probe_failures_before_disconnect: int = 2,
         logger: logging.Logger | None = None,
     ) -> None:
         self.side = side
@@ -46,10 +52,21 @@ class ScannerTCP:
         self.ip = ip
         self.port = int(port)
         self.timeout_seconds = float(timeout_seconds)
+        self.tcp_keepalive_enabled = bool(tcp_keepalive_enabled)
+        self.tcp_keepalive_idle_ms = int(tcp_keepalive_idle_ms)
+        self.tcp_keepalive_interval_ms = int(tcp_keepalive_interval_ms)
+        self.tcp_keepalive_count = int(tcp_keepalive_count)
+        self.active_probe_enabled = bool(active_probe_enabled)
+        self.active_probe_interval_seconds = float(active_probe_interval_seconds)
+        self.active_probe_timeout_seconds = float(active_probe_timeout_seconds)
+        self.active_probe_failures_before_disconnect = int(active_probe_failures_before_disconnect)
         self.logger = logger or logging.getLogger(__name__)
+
         self._sock: socket.socket | None = None
         self._buffer = ""
         self._buffer_started_at: float | None = None
+        self._last_health_check_at = 0.0
+        self._active_probe_failures = 0
 
     @property
     def is_connected(self) -> bool:
@@ -60,11 +77,16 @@ class ScannerTCP:
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(self.timeout_seconds)
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            self._configure_keepalive(sock)
             sock.connect((self.ip, self.port))
             sock.settimeout(self.timeout_seconds)
+
             self._sock = sock
             self._buffer = ""
             self._buffer_started_at = None
+            self._last_health_check_at = 0.0
+            self._active_probe_failures = 0
             self.logger.info("%s conectado en %s:%s", self.name, self.ip, self.port)
             return True
         except OSError:
@@ -73,7 +95,18 @@ class ScannerTCP:
             return False
 
     def close(self) -> None:
+        """Cierra agresivamente el socket y limpia estado interno.
+
+        En pruebas reales con scanners industriales, un socket medio abierto puede
+        quedarse como conexión zombie. shutdown() ayuda a notificar al stack TCP
+        local antes de destruir el socket. Si el cable ya está fuera, ignoramos
+        el error y seguimos limpiando el objeto para permitir reconexión limpia.
+        """
         if self._sock is not None:
+            try:
+                self._sock.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
             try:
                 self._sock.close()
             except OSError:
@@ -81,18 +114,65 @@ class ScannerTCP:
         self._sock = None
         self._buffer = ""
         self._buffer_started_at = None
+        self._last_health_check_at = 0.0
+        self._active_probe_failures = 0
 
     def reconnect(self) -> bool:
         return self.connect()
 
-    def read_available(self, incomplete_idle_seconds: float = 0.15) -> ScannerReadResult | None:
-        """Revisa si hay una lectura disponible sin bloquear el ciclo principal.
+    def check_connection(self, force: bool = False, interval_seconds: float = 1.0) -> bool:
+        """Verifica si el socket sigue saludable.
 
-        Regresa None si no hay datos completos todavía.
-        Si hay CR/LF/CRLF, separa primero y toma solo la primera lectura útil.
-        Si llega una lectura sin delimitador, se devuelve solo después de un pequeño
-        tiempo de inactividad para evitar validar fragmentos parciales.
+        Importante: en TCP una desconexión física puede tardar en detectarse si no
+        hay tráfico. Por eso se combina:
+        - TCP keepalive agresivo.
+        - SO_ERROR + recv(MSG_PEEK) no destructivo.
+        - Probe activo opcional por configuración.
         """
+        if self._sock is None:
+            return False
+
+        now = time.monotonic()
+        if not force and now - self._last_health_check_at < float(interval_seconds):
+            return True
+        self._last_health_check_at = now
+
+        try:
+            err = self._sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+            if err:
+                raise OSError(err, f"SO_ERROR={err}")
+
+            old_timeout = self._sock.gettimeout()
+            try:
+                self._sock.settimeout(0.0)
+                try:
+                    data = self._sock.recv(1, socket.MSG_PEEK)
+                    if data == b"":
+                        raise ConnectionError("socket cerrado por el scanner")
+                except (BlockingIOError, socket.timeout):
+                    pass
+            finally:
+                if self._sock is not None:
+                    self._sock.settimeout(old_timeout)
+
+            if self.active_probe_enabled:
+                if not self._active_connect_probe():
+                    self._active_probe_failures += 1
+                    if self._active_probe_failures >= self.active_probe_failures_before_disconnect:
+                        raise ConnectionError(
+                            f"probe TCP falló {self._active_probe_failures} veces consecutivas"
+                        )
+                else:
+                    self._active_probe_failures = 0
+
+            return True
+        except Exception as exc:
+            self.logger.warning("%s perdió conexión TCP: %s", self.name, exc)
+            self.close()
+            return False
+
+    def read_available(self, incomplete_idle_seconds: float = 0.15) -> ScannerReadResult | None:
+        """Revisa si hay una lectura disponible sin bloquear el ciclo principal."""
         if self._sock is None:
             raise ConnectionError(f"{self.name} no está conectado")
 
@@ -131,9 +211,6 @@ class ScannerTCP:
             if self._sock is not None:
                 self._sock.settimeout(old_timeout)
 
-        # Si quedó información sin delimitador, no inventamos cortes inmediatos.
-        # Se entrega después de un pequeño idle; el validador decidirá si es válida,
-        # larga, token de error, etc. Nunca se recorta para hacerla válida.
         if self._buffer.strip() and self._buffer_started_at is not None:
             elapsed = time.monotonic() - self._buffer_started_at
             if elapsed >= float(incomplete_idle_seconds):
@@ -145,11 +222,6 @@ class ScannerTCP:
         return None
 
     def read_first(self, timeout_seconds: float) -> ScannerReadResult:
-        """Lee hasta obtener la primera lectura útil o agotar timeout.
-
-        Conservado por compatibilidad, pero para el flujo real se prefiere
-        read_available() + CycleManager.poll().
-        """
         if self._sock is None:
             raise ConnectionError(f"{self.name} no está conectado")
 
@@ -187,9 +259,7 @@ class ScannerTCP:
             while True:
                 try:
                     data = self._sock.recv(1024)
-                except socket.timeout:
-                    break
-                except BlockingIOError:
+                except (socket.timeout, BlockingIOError):
                     break
                 if not data:
                     self.close()
@@ -204,6 +274,52 @@ class ScannerTCP:
             if self._sock is not None:
                 self._sock.settimeout(old_timeout)
         return discarded
+
+    def _configure_keepalive(self, sock: socket.socket) -> None:
+        if not self.tcp_keepalive_enabled:
+            return
+
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
+            # Windows: configura tiempo e intervalo en milisegundos.
+            if hasattr(socket, "SIO_KEEPALIVE_VALS"):
+                sock.ioctl(
+                    socket.SIO_KEEPALIVE_VALS,
+                    (1, self.tcp_keepalive_idle_ms, self.tcp_keepalive_interval_ms),
+                )
+
+            # Linux: configura idle/interval/count si las constantes existen.
+            idle_seconds = max(1, int(self.tcp_keepalive_idle_ms / 1000))
+            interval_seconds = max(1, int(self.tcp_keepalive_interval_ms / 1000))
+            if hasattr(socket, "TCP_KEEPIDLE"):
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, idle_seconds)
+            if hasattr(socket, "TCP_KEEPINTVL"):
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, interval_seconds)
+            if hasattr(socket, "TCP_KEEPCNT"):
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, self.tcp_keepalive_count)
+        except OSError:
+            self.logger.exception("No se pudo configurar TCP keepalive para %s", self.name)
+
+    def _active_connect_probe(self) -> bool:
+        """Probe opcional: intenta abrir una conexión corta al endpoint del scanner.
+
+        Si el scanner solo permite un cliente TCP, deja active_probe_enabled=false.
+        """
+        probe: socket.socket | None = None
+        try:
+            probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            probe.settimeout(self.active_probe_timeout_seconds)
+            probe.connect((self.ip, self.port))
+            return True
+        except OSError:
+            return False
+        finally:
+            if probe is not None:
+                try:
+                    probe.close()
+                except OSError:
+                    pass
 
     def _extract_first_from_buffer(self) -> tuple[str | None, list[str], bool]:
         match = _TERMINATOR_RE.search(self._buffer)
